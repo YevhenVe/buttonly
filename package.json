@@ -1,5 +1,5 @@
 {
-  "name": "linktree",
+  "name": "Buttonly",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,9 +9,11 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "firebase": "^12.17.0",
     "next": "16.3.0",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "react-easy-crop": "^6.2.3"
   },
   "devDependencies": {
     "@types/node": "^20",

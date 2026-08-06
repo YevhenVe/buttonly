@@ -1,0 +1,23 @@
+.field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.labelRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.value {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+}
+
+.input {
+  width: 100%;
+  accent-color: var(--accent);
+}

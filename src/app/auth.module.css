@@ -1,0 +1,102 @@
+.card {
+  width: 100%;
+  display: grid;
+  gap: 1rem;
+}
+
+.card h1 {
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
+  text-align: center;
+  color: #111;
+}
+
+.card > p:first-of-type {
+  color: #444;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.field label {
+  font-size: 0.85rem;
+  color: #555;
+  font-weight: 600;
+}
+
+.input {
+  width: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  background: #fff;
+  color: #111;
+  padding: 0.65rem 0.75rem;
+}
+
+.input:focus {
+  outline: 2px solid rgba(0, 0, 0, 0.2);
+  outline-offset: 1px;
+}
+
+.btn {
+  width: 100%;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.7rem 1rem;
+  font-weight: 650;
+  background: #111;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+}
+
+.btn:hover:not(:disabled) {
+  background: #2a2a2a;
+}
+
+.btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.btnGoogle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  background: #fff;
+  color: #111;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.btnGoogle:hover:not(:disabled) {
+  background: #f3f3f3;
+}
+
+.error {
+  color: #b91c1c;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.footer {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.footer a {
+  font-weight: 600;
+  color: #111;
+  text-decoration: underline;
+}
+
+.divider {
+  text-align: center;
+  color: #888;
+  font-size: 0.8rem;
+}

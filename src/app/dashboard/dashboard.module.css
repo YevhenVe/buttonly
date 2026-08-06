@@ -1,0 +1,240 @@
+.shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--background);
+}
+
+.header {
+  width: 100%;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.headerInner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 960px;
+  margin-inline: auto;
+  padding: 0.85rem 1.25rem;
+  box-sizing: border-box;
+}
+
+.headerLeft,
+.headerRight {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  line-height: 0;
+}
+
+.publicLink {
+  font-size: 0.9rem;
+  color: var(--muted);
+  font-family: var(--font-mono);
+}
+
+.publicLink:hover {
+  color: var(--foreground);
+}
+
+.btn {
+  border: 1px solid var(--border);
+  background: var(--background);
+  border-radius: 8px;
+  padding: 0.4rem 0.75rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btnSave {
+  background: var(--accent);
+  color: var(--accent-text);
+  border-color: transparent;
+  min-width: 4.5rem;
+}
+
+.btnSave:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.saveControls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.saveBadge {
+  font-size: 0.8rem;
+  color: var(--muted);
+  max-width: 14rem;
+}
+
+.saveOk {
+  color: #15803d;
+}
+
+.saveDirty {
+  color: #b45309;
+}
+
+.saveError {
+  color: #b91c1c;
+  max-width: 16rem;
+}
+
+/*
+  Shared grid so tabs + “Live preview” share one 40px row,
+  and editor stack + phone start on the same top edge (same gap).
+*/
+.body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 320px);
+  grid-template-rows: 40px auto;
+  column-gap: 1.25rem;
+  row-gap: 0.75rem;
+  width: 100%;
+  max-width: 960px;
+  margin-inline: auto;
+  padding: 1.25rem;
+  align-items: start;
+  box-sizing: border-box;
+}
+
+.tabs {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  height: 40px;
+  min-height: 40px;
+  box-sizing: border-box;
+}
+
+.previewLabel {
+  grid-column: 2;
+  grid-row: 1;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  box-sizing: border-box;
+}
+
+.tab {
+  box-sizing: border-box;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 0 0.9rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.tabActive {
+  background: var(--accent);
+  color: var(--accent-text);
+  border-color: transparent;
+}
+
+.panel {
+  grid-column: 1;
+  grid-row: 2;
+  min-width: 0;
+}
+
+.stack {
+  display: grid;
+  gap: 1rem;
+}
+
+.preview {
+  grid-column: 2;
+  grid-row: 2;
+  min-width: 0;
+  align-self: start;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.missingPage {
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  display: grid;
+  gap: 0.75rem;
+}
+
+.missingPage a {
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+@media (max-width: 900px) {
+  .body {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+
+  .tabs {
+    grid-column: 1;
+    grid-row: auto;
+    height: auto;
+    min-height: 40px;
+  }
+
+  .previewLabel {
+    grid-column: 1;
+    grid-row: auto;
+    order: -2;
+    justify-content: flex-start;
+  }
+
+  .preview {
+    grid-column: 1;
+    grid-row: auto;
+    order: -1;
+  }
+
+  .panel {
+    grid-column: 1;
+    grid-row: auto;
+  }
+}
