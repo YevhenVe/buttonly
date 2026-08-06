@@ -1,0 +1,554 @@
+.root {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  color: var(--page-fg, var(--foreground));
+  background: var(--page-bg-color, var(--background));
+  --button-radius: 12px;
+  --button-opacity: 0.92;
+  --button-blur: 0px;
+  --button-surface-rgb: 255, 255, 255;
+  --button-text: #111111;
+}
+
+.bgLayer {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.bgImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  transform-origin: center center;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2.5rem 1.25rem 2rem;
+}
+
+.inner {
+  width: 100%;
+  max-width: 26rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  flex: 1;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.65rem;
+  width: 100%;
+}
+
+.avatarWrap {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  flex-shrink: 0;
+}
+
+.avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--surface);
+  border: 2px solid color-mix(in srgb, var(--page-fg, #111) 12%, transparent);
+}
+
+.avatarPlaceholder {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 2rem;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--page-fg, #111) 10%, transparent);
+  color: var(--page-fg, var(--foreground));
+}
+
+/* 18+ badge pinned to top-right of avatar */
+.ageBadgeOnAvatar {
+  position: absolute;
+  top: -4px;
+  right: -8px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 1.35rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  background: #b45309;
+  color: #fff;
+  border: 2px solid var(--page-bg-color, #fff);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+}
+
+.displayName {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.description {
+  font-size: 0.95rem;
+  line-height: 1.45;
+  max-width: 22rem;
+  white-space: pre-wrap;
+}
+
+/* Pill background for name / description / group titles */
+.textWithBg {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.groups {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.groupTitle {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.7;
+  text-align: center;
+  align-self: center;
+}
+
+.groupTitle.textWithBg {
+  opacity: 1;
+}
+
+.buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.linkButton {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 3.25rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--button-radius);
+  background: rgba(
+    var(--button-surface-rgb),
+    var(--button-opacity)
+  );
+  -webkit-backdrop-filter: blur(var(--button-blur));
+  backdrop-filter: blur(var(--button-blur));
+  color: var(--button-text, var(--page-fg, var(--foreground)));
+  border: 1px solid color-mix(in srgb, var(--button-text, var(--page-fg, #111)) 18%, transparent);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  font-weight: 600;
+  text-align: left;
+  /* Smooth spring (quick, no stepped keyframes) */
+  transition:
+    transform 0.32s cubic-bezier(0.22, 1.45, 0.36, 1),
+    box-shadow 0.28s cubic-bezier(0.22, 1.2, 0.36, 1),
+    background 0.2s ease,
+    border-color 0.2s ease,
+    filter 0.2s ease;
+  transform: translateY(0) scale(1);
+  will-change: transform;
+}
+
+.linkButton:hover {
+  transform: translateY(-4px) scale(1.035);
+  border-color: color-mix(in srgb, var(--page-fg, #111) 35%, transparent);
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.16),
+    0 0 0 2px color-mix(in srgb, var(--page-fg, #111) 12%, transparent);
+  filter: brightness(1.08);
+  background: rgba(
+    var(--button-surface-rgb),
+    min(1, calc(var(--button-opacity) + 0.12))
+  );
+}
+
+.linkButton:active {
+  transform: translateY(-1px) scale(0.985);
+  transition-duration: 0.1s;
+  transition-timing-function: cubic-bezier(0.3, 0.7, 0.4, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  filter: brightness(1.03);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .linkButton {
+    transition: background 0.2s ease, border-color 0.2s ease;
+    will-change: auto;
+  }
+
+  .linkButton:hover {
+    transform: none;
+    filter: brightness(1.08);
+  }
+
+  .linkButton:active {
+    transform: none;
+  }
+}
+
+.linkIcon {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.linkIconFallback {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  opacity: 0.55;
+}
+
+.linkLabel {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.linkButtonAdult {
+  border-color: color-mix(in srgb, #f59e0b 35%, var(--page-fg, #111) 12%);
+}
+
+.linkAdultBadge {
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 0.15rem 0.4rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, #f59e0b 22%, transparent);
+  color: #b45309;
+  border: 1px solid color-mix(in srgb, #f59e0b 40%, transparent);
+}
+
+[data-theme="dark"] .linkAdultBadge {
+  color: #fbbf24;
+}
+
+.linkAgeBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.linkAgeCard {
+  width: min(100%, 22rem);
+  padding: 1.35rem;
+  border-radius: 16px;
+  border: 1px solid #2a2a2a;
+  background: #171717;
+  color: #ededed;
+  display: grid;
+  gap: 0.75rem;
+  text-align: center;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+}
+
+.linkAgeTitle {
+  font-size: 1.15rem;
+  letter-spacing: -0.02em;
+}
+
+.linkAgeText {
+  color: #a3a3a3;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.linkAgeText strong {
+  color: #ededed;
+}
+
+.linkAgeActions {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.linkAgeCancel {
+  border: 0;
+  background: transparent;
+  color: #a3a3a3;
+  font-size: 0.9rem;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0.4rem;
+}
+
+.footer {
+  margin-top: auto;
+  padding-top: 1.5rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.shareLabel {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.65;
+}
+
+.shareRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.65rem;
+}
+
+.shareLink {
+  position: relative;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: var(--page-surface, var(--surface));
+  color: var(--page-fg, var(--foreground));
+  border: 1px solid color-mix(in srgb, var(--page-fg, #111) 12%, transparent);
+  transition: transform 0.15s ease;
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+}
+
+.shareLink:hover {
+  transform: translateY(-1px);
+}
+
+.shareLink svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.shareCopiedTip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  background: var(--page-fg, #111);
+  color: var(--page-bg-color, #fff);
+  pointer-events: none;
+}
+
+.notFound {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+  text-align: center;
+  gap: 0.5rem;
+}
+
+/* Live preview phone frame — always fill parent height (not 100vh) */
+.previewShell {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-height: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.previewShell .content {
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-height: 100%;
+  height: 100%;
+  padding: 1.5rem 1rem 1.25rem;
+}
+
+.previewShell .inner {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.previewShell .bgLayer {
+  inset: 0;
+}
+
+.previewShell .bgImage {
+  object-position: center;
+  transform-origin: center center;
+}
+
+/* 18+ age gate */
+.ageGate {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: #0a0a0a;
+  color: #ededed;
+}
+
+.ageCard {
+  width: 100%;
+  max-width: 22rem;
+  padding: 1.5rem;
+  border-radius: 16px;
+  border: 1px solid #2a2a2a;
+  background: #171717;
+  display: grid;
+  gap: 0.85rem;
+  text-align: center;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+}
+
+.ageTag {
+  justify-self: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, #f59e0b 22%, transparent);
+  color: #fbbf24;
+  border: 1px solid color-mix(in srgb, #f59e0b 40%, transparent);
+}
+
+.ageTitle {
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
+}
+
+.ageText {
+  color: #a3a3a3;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.ageText strong {
+  color: #fbbf24;
+}
+
+.ageActions {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 0.35rem;
+}
+
+.ageEnter {
+  border: 0;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  background: #f59e0b;
+  color: #111;
+  cursor: pointer;
+}
+
+.ageEnter:hover {
+  filter: brightness(1.05);
+}
+
+.ageLeave {
+  font-size: 0.9rem;
+  color: #a3a3a3;
+  text-decoration: underline;
+}
+
+/* 18+ preview: wrap must pass full height to PublicPage so bgImage stays 100% */
+.agePreviewWrap {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-height: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Overlay badge — does not consume layout height (was breaking bg height) */
+.ageBadge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.4rem 0.75rem;
+  background: #b45309;
+  color: #fff;
+  pointer-events: none;
+}
+
+.agePreviewWrap > .previewShell {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+}

@@ -1,69 +1,43 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
+
+import Link from "next/link";
+import { useAuth } from "@/context/AuthProvider";
+import {
+  MarketingShell,
+  marketingStyles as styles,
+} from "@/components/marketing/MarketingShell";
 
 export default function Home() {
+  const { user, configured } = useAuth();
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>
-            To get started, edit the{" "}
-            <code className={styles.code}>page.tsx</code> file.
-          </h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <MarketingShell active="home">
+      <div className={`${styles.panel} ${styles.panelWide}`}>
+        <h1>One link for everything you share</h1>
+        <p className={styles.panelLead}>
+          Customize your avatar, background, buttons, and share bar. Your page
+          lives at a personal URL, free for all.
+        </p>
+        <div className={styles.ctaRow}>
+          {user ? (
+            <Link className={`${styles.btn} ${styles.btnPrimary}`} href="/dashboard">
+              Open dashboard
+            </Link>
+          ) : (
+            <Link className={`${styles.btn} ${styles.btnPrimary}`} href="/signup">
+              Create your page
+            </Link>
+          )}
+          <Link className={styles.btn} href="/login">
+            I already have an account
+          </Link>
+        </div>
+        {!configured ? (
+          <p className={styles.tip}>
+            Tip: add Firebase keys to <code>.env.local</code> before signing up.
           </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+        ) : null}
+      </div>
+    </MarketingShell>
   );
 }
