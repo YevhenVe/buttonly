@@ -247,7 +247,7 @@
     grid-row: auto;
     order: -1;
     max-width: 100%;
-    overflow: hidden;
+    overflow: visible; /* allow touch scroll to chain to the page */
   }
 
   .panel {

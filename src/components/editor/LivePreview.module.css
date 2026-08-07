@@ -20,13 +20,6 @@
   flex-direction: column;
 }
 
-@media (max-width: 900px) {
-  .phone {
-    width: 100%;
-    max-width: min(100%, 340px);
-  }
-}
-
 .scroll {
   position: relative;
   flex: 1 1 auto;
@@ -56,4 +49,39 @@
   color: var(--muted);
   padding: 1rem;
   text-align: center;
+}
+
+/*
+  Mobile: do not use a nested scrollport on the phone.
+  Touch gestures must scroll the dashboard page, not get stuck on Live preview.
+*/
+@media (max-width: 900px) {
+  .phone {
+    width: 100%;
+    max-width: min(100%, 340px);
+    height: auto;
+    max-height: none;
+    overflow: hidden; /* clip to border-radius only */
+    touch-action: pan-y;
+  }
+
+  .scroll {
+    flex: none;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    overscroll-behavior: auto;
+    -webkit-overflow-scrolling: auto;
+    touch-action: pan-y;
+  }
+
+  .scroll > * {
+    height: auto;
+    min-height: 0;
+  }
+
+  .placeholder {
+    min-height: 12rem;
+    height: auto;
+  }
 }
