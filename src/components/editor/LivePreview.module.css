@@ -20,6 +20,13 @@
   flex-direction: column;
 }
 
+@media (max-width: 900px) {
+  .phone {
+    width: 100%;
+    max-width: min(100%, 340px);
+  }
+}
+
 .scroll {
   position: relative;
   flex: 1 1 auto;
