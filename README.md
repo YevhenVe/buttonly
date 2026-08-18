@@ -1,64 +1,35 @@
-# Buttonly (Next.js + Firebase)
+# Agent Instructions & Project Context: Buttonly
 
-A free personal link page builder with customizable avatars, backgrounds, button groups, themes, and social share links.
+## Project Overview
+**Project Name:** Buttonly  
+**Stack:** Next.js 16 (App Router) + Firebase (Auth & Firestore)  
+**Description:** A free "link tree" personal page builder. Public pages live at `/:username` with customizable avatars, backgrounds, buttons, themes, and sharing options. Images (avatar + background) are stored as **compressed base64 data-URLs directly within the Firestore document** — Firebase Storage is NOT used.
 
-Images (avatar + background only) are stored as **compressed base64 data URLs** inside the Firestore page document — **no Firebase Storage**.
+---
 
-## Stack
+## Tech Stack & Versions
+- **Framework:** Next.js 16.3.0 (App Router)
+  > ⚠️ **CRITICAL RULE:** Per `AGENTS.md` rules, this is NOT standard Next.js. Always read documentation in `node_modules/next/dist/docs/` before writing code due to breaking changes.
+- **Library/Language:** React 19.2.8, TypeScript 5 (strict mode), `react-compiler: true` in `next.config.ts`
+- **Database & Auth:** Firebase JS SDK 12.17.0 (Auth + Firestore)
+- **Utilities:** `react-easy-crop` 6.2.3 (avatar cropping)
+- **Styling:** Native CSS Modules + global CSS variables/tokens in `globals.css` (No CSS frameworks)
+- **Path Alias:** `@/*` → `./src/*`
+- **Runtime:** Node v24.15.0, npm 11.14.1
 
-- Next.js 16 (App Router) + React 19
-- Native CSS (CSS modules + global tokens)
-- Firebase Auth + Cloud Firestore
+---
 
-## Setup
+## Setup & Local Development
 
-### 1. Install
-
+### 1. Install & Run
 ```bash
 npm install
+npm run dev
 ```
+Open [http://localhost:3000](http://localhost:3000). Without env keys, the app still boots and shows a “Firebase not configured” message.
 
-### 2. Firebase project
-
-1. Create a project at [Firebase Console](https://console.firebase.google.com/)
-2. Add a **Web** app and copy the config into `.env.local`
-3. Create a **Cloud Firestore** database (start in **production mode** is fine)
-4. **Important — publish security rules** (fixes “Missing or insufficient permissions”):
-   - Open **Firestore Database → Rules**
-   - Replace everything with the contents of `firestore.rules` in this repo
-   - Click **Publish**
-   - Wait a few seconds, then try signup again
-
-### 2b. Enable Email/Password + Google auth
-
-Open **Build → Authentication → Sign-in method**:
-
-1. **Email/Password**
-   - Click **Email/Password** → enable **Email/Password** → Save  
-   - (Email link is optional; leave off for this app)
-
-2. **Google**
-   - Click **Google** → enable → choose a project support email → Save  
-   - Under **Authentication → Settings → Authorized domains**, ensure `localhost` is listed (default)  
-   - For production, add your real domain (e.g. `yourapp.vercel.app`)
-
-3. Confirm both providers show as **Enabled** on the Sign-in method list
-
-App routes:
-
-| Method | Sign up | Log in |
-|--------|---------|--------|
-| Email/password | `/signup` form | `/login` form |
-| Google | “Sign up with Google” (enter username first) | “Continue with Google” (new users pick username next) |
-
-### 3. Environment
-
-```bash
-cp .env.example .env.local
-```
-
-Fill in:
-
+### 2. Environment Variables (`.env.local`)
+Copy `.env.example` to `.env.local` and fill in your public client keys:
 ```bash
 NEXT_PUBLIC_FIREBASE_API_KEY=
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
@@ -66,40 +37,102 @@ NEXT_PUBLIC_FIREBASE_PROJECT_ID=
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
 NEXT_PUBLIC_FIREBASE_APP_ID=
 ```
+*Note: Protect data with Firestore rules, not by hiding these keys. Never commit `.env.local`.*
 
-These are **public client** keys. Protect data with Firestore rules, not by hiding them.  
-**Never commit** `.env.local`.
+### 3. Firebase Configuration
+1. **Firestore Rules:** Replace default rules with the contents of `firestore.rules` from this repo and publish.
+2. **Auth:** Enable **Email/Password** and **Google** sign-in providers in the Firebase Console. Add `localhost` (and your production domain) to Authorized domains.
 
-### 4. Run
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000).
-
-Without env keys the app still boots and shows a “Firebase not configured” message.
-
-## Features
-
-- Public page at `/[username]` (e.g. `yoursite.com/alex`)
-- Dashboard tabs: Profile, Appearance, Links, Share
-- Avatar crop/zoom → compressed base64
-- Background color or image, blur slider, top/right/bottom/left insets
-- Light / dark theme per page
-- Description font + color
-- Button groups with auto favicons
-- Button corner radius slider
-- Share bar: X, Facebook, Instagram, Threads, TikTok, Reddit
-- Debounced autosave to the user’s Firestore document
-
-## Scripts
-
+### 4. Scripts
 - `npm run dev` — development
 - `npm run build` — production build
 - `npm run start` — start production server
 - `npm run lint` — ESLint
 
-## Image size note
+---
 
-Firestore documents max out at **1 MiB**. Avatar and background are resized and JPEG-compressed in the browser before save (avatar ~150 KB, background ~500 KB budgets).
+## Data Structure & Architecture
+
+### Data Models (`src/lib/types.ts`)
+Unified `PageDocument` structure:
+```typescript
+{
+  uid: string;
+  username: string;
+  updatedAt: string;
+  is18Plus: boolean;
+  profile: {
+    displayName: string;
+    description: string;
+    descriptionFont: string;
+    descriptionColor: string;
+    avatarDataUrl: string;
+    nameBackground: string;
+    descriptionBackground: string;
+  };
+  theme: 'light' | 'dark';
+  background: {
+    type: 'color' | 'image';
+    color: string;
+    imageDataUrl: string;
+    blur: number;
+    zoom: number; // NOTE: strictly zoom, no insets.
+  };
+  buttonStyle: {
+    borderRadius: number;
+    opacity: number;
+    blur: number;
+    backgroundColor: string;
+    textColor: string;
+  };
+  groupTitleStyle: {
+    background: string;
+  };
+  groups: ButtonGroup[];
+  share: ShareSettings;
+  shareEnabled: boolean;
+}
+```
+- Includes helper functions `createDefaultPage()` and **`normalizePageDocument()`**.
+- **Important:** `normalizePageDocument()` acts as a safeguard against legacy or incomplete documents. Any new field added to the schema **must** be populated with default values here.
+
+### Firestore Rules & Access
+- `usernames/{username}` → `{uid, createdAt}`: Handles unique username reservation. Create-only by owner; unchangeable (no handle transfers).
+- `pages/{uid}` → `{uid, username, ...}`: Public read access; write access restricted to document owner.
+
+### Firebase Layer
+- **`src/lib/firebase/pages.ts`:**
+  - `claimUsernameAndCreatePage`: Transactional handle reservation + page creation.
+  - `getPageByUid` / `getPageByUsername` (resolves via `usernames -> uid`).
+  - `savePage` / `patchPage` / `buildPageUpdate`: Performs **delta updates** to prevent re-uploading large base64 strings on minor field updates.
+  - `pageContentKey`: Generates content hash without `updatedAt` for dirty checking.
+- **`src/lib/firebase/auth.ts`:** `signUpWithEmail`, `signInWithEmail`, `signInWithGoogle(username?)`, `logOut`. Cleans up accounts if handle reservation fails.
+
+### Image Handling & Size Limits
+Firestore documents max out at **1 MiB**. 
+- Avatar and background are resized and compressed (WebP with JPEG fallback) in the browser before saving. 
+- Strict budgets: **Avatar ≤ 150 KB**, **Background ≤ 720 KB**. Uses `estimatePageImagePayloadBytes` to enforce this.
+
+---
+
+## App Router Structure
+- `/` — Landing page using marketing shell.
+- `/signup`, `/login` — Auth pages. `?google=1` prompts handle selection post-auth.
+- `/dashboard` — Client-side builder wrapped in `AuthGuard` + `PageEditorProvider`. Features Profile, Appearance, Links, and Share tabs. Contains a **manual Save button** with automatic retry logic for `resource-exhausted` errors (NO autosave).
+- `/[username]` — Server-rendered public link-tree page via `getPageByUsername`. Includes fallback `PublicPageNotFound`. Cached via `unstable_cache`.
+- `/actions/revalidate.ts` — Server Action executing `revalidateTag('page-<username>', 'max')` post-save.
+
+---
+
+## Git Repository State (WIP context)
+- **Current branch:** `8726`
+- **Current Focus:** Implementing public page caching with per-user cache invalidation. `unstable_cache` is being added to `/[username]/page.tsx`, and `PageEditorProvider.tsx` now calls `revalidatePage()` upon successful manual save.
+
+---
+
+## Key Core Rules for AI Agents
+1. **Adding New Fields:** Always register new fields in 3 places: `types.ts`, `normalizePageDocument()` (with default values), and `buildPageUpdate()`.
+2. **Image Handling:** All images must run through compressor modules before saving. ALWAYS use delta updates (`buildPageUpdate`) to preserve bandwidth and payload limits.
+3. **Firebase Runtime:** Firebase client SDK handles data fetching. Public page reads occur client-side or server-side via open read rules.
+4. **Cache Management:** Public pages are cached using `unstable_cache`. Every successful save in the editor **must** execute `revalidatePage(username)`.
+5. **Next.js Documentation Check:** Prior to modifying Next.js API features or configuration, always check local guides in `node_modules/next/dist/docs/`.
