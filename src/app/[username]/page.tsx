@@ -1,9 +1,11 @@
 import { unstable_cache } from "next/cache";
+import { cookies } from "next/headers";
 import {
   PublicPage,
   PublicPageNotFound,
 } from "@/components/public/PublicPage";
 import { FirebaseMissing } from "@/components/ui/FirebaseMissing";
+import { AGE_CONFIRM_KEY, AGE_CONFIRM_VALUE } from "@/lib/ageGate";
 import { getPageByUsername } from "@/lib/firebase/pages";
 import { isFirebaseConfigured } from "@/lib/firebase/client";
 import type { PageDocument } from "@/lib/types";
@@ -62,5 +64,14 @@ export default async function UserPublicPage({
 
   if (!page) return <PublicPageNotFound username={username} />;
 
-  return <PublicPage page={page} />;
+  // When a returning visitor already confirmed 18+ (cookie), render the page
+  // content directly on the server so the age gate is not even sent to the
+  // browser — this is what kills the "gate flashes for a split second" issue.
+  const cookieStore = await cookies();
+  const serverAgeConfirmed =
+    (cookieStore.get(AGE_CONFIRM_KEY)?.value ?? "") === AGE_CONFIRM_VALUE;
+
+  return (
+    <PublicPage page={page} serverAgeConfirmed={serverAgeConfirmed} />
+  );
 }

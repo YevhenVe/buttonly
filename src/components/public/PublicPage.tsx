@@ -57,9 +57,12 @@ function themeVars(page: PageDocument): CSSProperties {
 export function PublicPage({
   page,
   preview = false,
+  serverAgeConfirmed = false,
 }: {
   page: PageDocument;
   preview?: boolean;
+  /** True when the server saw a valid age-confirmation cookie. */
+  serverAgeConfirmed?: boolean;
 }) {
   const { background, profile } = page;
   const groups = [...page.groups].sort((a, b) => a.order - b.order);
@@ -205,7 +208,11 @@ export function PublicPage({
   );
 
   return (
-    <AgeGate enabled={is18Plus} preview={preview}>
+    <AgeGate
+      enabled={is18Plus}
+      preview={preview}
+      serverConfirmed={serverAgeConfirmed}
+    >
       {body}
     </AgeGate>
   );

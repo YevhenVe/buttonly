@@ -1,26 +1,8 @@
 "use client";
 
 import { useState, useSyncExternalStore, type ReactNode } from "react";
+import { readAgeConfirmed, writeAgeConfirmed } from "@/lib/ageGate";
 import styles from "./PublicPage.module.css";
-
-/** Browser-wide: once confirmed, profile age gate is not shown again. */
-const STORAGE_KEY = "Buttonly_age_confirmed_18";
-
-function readConfirmed(): boolean {
-  try {
-    return localStorage.getItem(STORAGE_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-
-function writeConfirmed() {
-  try {
-    localStorage.setItem(STORAGE_KEY, "1");
-  } catch {
-    /* private mode / blocked storage */
-  }
-}
 
 function subscribe(onStoreChange: () => void) {
   window.addEventListener("storage", onStoreChange);
@@ -30,15 +12,18 @@ function subscribe(onStoreChange: () => void) {
 export function AgeGate({
   enabled,
   preview = false,
+  serverConfirmed = false,
   children,
 }: {
   enabled: boolean;
   preview?: boolean;
+  /** True when the server already saw a matching confirmation cookie. */
+  serverConfirmed?: boolean;
   children: ReactNode;
 }) {
   const storedConfirmed = useSyncExternalStore(
     subscribe,
-    readConfirmed,
+    readAgeConfirmed,
     () => false,
   );
   const [localEntered, setLocalEntered] = useState(false);
@@ -58,10 +43,10 @@ export function AgeGate({
     );
   }
 
-  if (entered) return <>{children}</>;
+  if (serverConfirmed || entered) return <>{children}</>;
 
   const confirmAge = () => {
-    writeConfirmed();
+    writeAgeConfirmed();
     setLocalEntered(true);
   };
 

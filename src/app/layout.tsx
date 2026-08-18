@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter, Source_Serif_4 } from "next/font/google";
 import { AuthProvider } from "@/context/AuthProvider";
+import { ageGateBootScript } from "@/lib/ageGate";
+import { CookieConsentBanner } from "@/components/ui/CookieConsentBanner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -38,7 +40,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${sourceSerif.variable}`}
     >
       <body>
+        {/* Age-gate storage sync: runs before React hydrates, but never
+            mutates the DOM (that would cause hydration mismatches). It only
+            keeps the localStorage flag and the confirm cookie in sync. */}
+        <script dangerouslySetInnerHTML={{ __html: ageGateBootScript }} />
         <AuthProvider>{children}</AuthProvider>
+        <CookieConsentBanner />
       </body>
     </html>
   );
