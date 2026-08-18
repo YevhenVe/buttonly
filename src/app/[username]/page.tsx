@@ -1,7 +1,4 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { unstable_cache } from "next/cache";
 import {
   PublicPage,
   PublicPageNotFound,
@@ -16,58 +13,49 @@ import {
   RESERVED_USERNAMES,
 } from "@/lib/validation";
 
-export default function UserPublicPage() {
-  const params = useParams<{ username: string }>();
-  const username = normalizeUsername(params.username ?? "");
-  const configured = isFirebaseConfigured();
-  const [page, setPage] = useState<PageDocument | null | undefined>(
-    configured ? undefined : null,
-  );
-  const [error, setError] = useState<string | null>(null);
+/**
+ * Server-side, cached loader for a user's public page.
+ *
+ * The cache tag is unique per user (`page-${username}`) so that saving one
+ * user's page only invalidates that user's cached entry — never the cached
+ * pages of other users. The username is part of both the cache key parts and
+ * the tag, and both sides use the same normalized value.
+ */
+function loadCachedPageByUsername(username: string) {
+  return unstable_cache(
+    async (uname: string): Promise<PageDocument | null> =>
+      getPageByUsername(uname),
+    ["page-by-username", username],
+    { tags: [`page-${username}`] },
+  )(username);
+}
+
+export default async function UserPublicPage({
+  params,
+}: {
+  params: Promise<{ username: string }>;
+}) {
+  const { username: raw } = await params;
+  const username = normalizeUsername(raw ?? "");
 
   const invalidRoute =
     !username ||
     RESERVED_USERNAMES.has(username) ||
     !isValidUsername(username);
 
-  useEffect(() => {
-    if (!configured || invalidRoute) return;
-
-    let cancelled = false;
-    getPageByUsername(username)
-      .then((doc) => {
-        if (!cancelled) setPage(doc);
-      })
-      .catch((e: unknown) => {
-        if (!cancelled) {
-          setError(e instanceof Error ? e.message : "Failed to load");
-          setPage(null);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [username, configured, invalidRoute]);
-
-  if (!configured) return <FirebaseMissing />;
+  if (!isFirebaseConfigured()) return <FirebaseMissing />;
 
   if (invalidRoute) {
     return <PublicPageNotFound username={username || "unknown"} />;
   }
 
-  if (page === undefined) {
+  let page: PageDocument | null;
+  try {
+    page = await loadCachedPageByUsername(username);
+  } catch (e: unknown) {
     return (
       <div className="center-screen">
-        <p>Loading…</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="center-screen">
-        <p>{error}</p>
+        <p>{e instanceof Error ? e.message : "Failed to load"}</p>
       </div>
     );
   }

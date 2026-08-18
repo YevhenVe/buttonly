@@ -15,6 +15,7 @@ import {
   pageContentKey,
   savePage,
 } from "@/lib/firebase/pages";
+import { revalidatePage } from "@/app/actions/revalidate";
 import type { PageDocument } from "@/lib/types";
 import { useAuth } from "./AuthProvider";
 
@@ -156,6 +157,11 @@ export function PageEditorProvider({ children }: { children: ReactNode }) {
         if (!toSave) break;
 
         await savePage(toSave, lastSavedRef.current);
+        // Invalidate this user's public-page cache tag right after the write
+        // succeeds so the owner's public page reflects the latest save.
+        void revalidatePage(toSave.username).catch(() => {
+          /* cache invalidation is best-effort; the write already succeeded */
+        });
         lastSavedRef.current = toSave;
         lastSavedKeyRef.current = pageContentKey(toSave);
         setIsDirty(false);
