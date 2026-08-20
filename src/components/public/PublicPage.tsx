@@ -218,13 +218,4 @@ export function PublicPage({
   );
 }
 
-export function PublicPageNotFound({ username }: { username: string }) {
-  return (
-    <div className={styles.notFound}>
-      <h1>Page not found</h1>
-      <p>
-        No page for <strong>@{username}</strong>
-      </p>
-    </div>
-  );
-}
+

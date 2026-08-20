@@ -119,7 +119,7 @@ Firestore documents max out at **1 MiB**.
 - `/` — Landing page using marketing shell.
 - `/signup`, `/login` — Auth pages. `?google=1` prompts handle selection post-auth.
 - `/dashboard` — Client-side builder wrapped in `AuthGuard` + `PageEditorProvider`. Features Profile, Appearance, Links, and Share tabs. Contains a **manual Save button** with automatic retry logic for `resource-exhausted` errors (NO autosave).
-- `/[username]` — Server-rendered public link-tree page via `getPageByUsername`. Includes fallback `PublicPageNotFound`. Cached via `unstable_cache`.
+- `/[username]` — Server-rendered public link-tree page via `getPageByUsername`. Missing/invalid pages render the global 404 page. Cached via `unstable_cache`.
 - `/actions/revalidate.ts` — Server Action executing `revalidateTag('page-<username>', 'max')` post-save.
 
 ---

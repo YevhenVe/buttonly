@@ -396,15 +396,6 @@
   pointer-events: none;
 }
 
-.notFound {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 2rem;
-  text-align: center;
-  gap: 0.5rem;
-}
-
 /* Live preview: fill phone on desktop; grow with content on mobile (no 100vh trap) */
 .previewShell {
   position: relative;
