@@ -1,9 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { cookies } from "next/headers";
-import {
-  PublicPage,
-  PublicPageNotFound,
-} from "@/components/public/PublicPage";
+import { notFound } from "next/navigation";
+import { PublicPage } from "@/components/public/PublicPage";
 import { FirebaseMissing } from "@/components/ui/FirebaseMissing";
 import { AGE_CONFIRM_KEY, AGE_CONFIRM_VALUE } from "@/lib/ageGate";
 import { getPageByUsername } from "@/lib/firebase/pages";
@@ -48,7 +46,7 @@ export default async function UserPublicPage({
   if (!isFirebaseConfigured()) return <FirebaseMissing />;
 
   if (invalidRoute) {
-    return <PublicPageNotFound username={username || "unknown"} />;
+    notFound();
   }
 
   let page: PageDocument | null;
@@ -62,7 +60,7 @@ export default async function UserPublicPage({
     );
   }
 
-  if (!page) return <PublicPageNotFound username={username} />;
+  if (!page) notFound();
 
   // When a returning visitor already confirmed 18+ (cookie), render the page
   // content directly on the server so the age gate is not even sent to the
