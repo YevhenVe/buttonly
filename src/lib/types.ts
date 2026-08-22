@@ -85,6 +85,8 @@ export interface PageDocument {
   updatedAt: number;
   /** When true, visitors see an 18+ age warning before the page. */
   is18Plus: boolean;
+  /** When true, a QR code to the page is shown on the public profile. */
+  qrCodeEnabled?: boolean;
   profile: PageProfile;
   theme: ThemeMode;
   background: PageBackground;
@@ -128,6 +130,7 @@ export function createDefaultPage(uid: string, username: string): PageDocument {
     username,
     updatedAt: Date.now(),
     is18Plus: false,
+    qrCodeEnabled: false,
     profile: {
       displayName: username,
       displayNameColor: "#111111",
@@ -178,6 +181,7 @@ export function normalizePageDocument(raw: PageDocument): PageDocument {
     ...createDefaultPage(raw.uid, raw.username),
     ...raw,
     is18Plus: Boolean(raw.is18Plus),
+    qrCodeEnabled: Boolean(raw.qrCodeEnabled),
     profile: {
       ...createDefaultPage(raw.uid, raw.username).profile,
       ...raw.profile,

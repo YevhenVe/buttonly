@@ -3,6 +3,7 @@ import type { PageDocument } from "@/lib/types";
 import { descriptionFontFamily } from "@/lib/fonts";
 import { LinkButton } from "./LinkButton";
 import { ShareBar } from "./ShareBar";
+import { QRCodeCard } from "./QRCodeCard";
 import { AgeGate } from "./AgeGate";
 import styles from "./PublicPage.module.css";
 
@@ -208,6 +209,10 @@ export function PublicPage({
               );
             })}
           </div>
+
+          {page.qrCodeEnabled ? (
+            <QRCodeCard username={page.username} />
+          ) : null}
 
           <ShareBar page={page} preview={preview} />
         </div>

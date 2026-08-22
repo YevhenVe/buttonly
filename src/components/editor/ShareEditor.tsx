@@ -35,8 +35,36 @@ export function ShareEditor() {
     }));
   };
 
+  const toggleQr = () => {
+    setPage((prev) => ({ ...prev, qrCodeEnabled: !prev.qrCodeEnabled }));
+  };
+
+  const qrEnabled = Boolean(page.qrCodeEnabled);
+
   return (
     <div className={styles.panel}>
+      <div className={styles.section}>
+        <h3 className={styles.sectionTitle}>QR Code</h3>
+        <label className={styles.switchRow}>
+          <span className={styles.switchText}>
+            <strong>QR code</strong>
+            <span className={styles.hint}>
+              Показывать QR-код для быстрого перехода на страницу вашего
+              профиля.
+            </span>
+          </span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={qrEnabled}
+            className={`${styles.switch} ${qrEnabled ? styles.switchOn : ""}`}
+            onClick={toggleQr}
+          >
+            <span className={styles.switchThumb} />
+          </button>
+        </label>
+      </div>
+
       <div className={styles.section}>
         <h3 className={styles.sectionTitle}>Share bar</h3>
         <p className={styles.hint}>
