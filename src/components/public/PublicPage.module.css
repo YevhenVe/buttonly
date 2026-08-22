@@ -330,6 +330,48 @@
   padding: 0.4rem;
 }
 
+/* QR code card (always dark-on-white for scan contrast on any theme) */
+.qrCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 14rem;
+  padding: 1rem;
+  margin-top: 2rem;
+  border-radius: var(--button-radius);
+  background: #ffffffaf;
+  border: 1px solid color-mix(in srgb, var(--page-fg, #111) 18%, transparent);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.qrFrame {
+  width: 100%;
+  max-width: 11rem;
+  aspect-ratio: 1 / 1;
+  display: grid;
+  place-items: center;
+}
+
+.qrFrame svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.qrCaption {
+  max-width: 100%;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #111111;
+  opacity: 0.65;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
 .footer {
   margin-top: auto;
   padding-top: 1.5rem;

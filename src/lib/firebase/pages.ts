@@ -111,6 +111,7 @@ export function buildPageUpdate(
     uid: n.uid,
     username: n.username,
     is18Plus: Boolean(n.is18Plus),
+    qrCodeEnabled: Boolean(n.qrCodeEnabled),
     theme: n.theme,
     shareEnabled: n.shareEnabled ?? [],
     share: n.share ?? {},
