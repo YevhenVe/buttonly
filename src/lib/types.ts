@@ -33,11 +33,17 @@ export interface TextBackgroundStyle {
   color: string;
 }
 
+export type DescriptionFontSize = "sm" | "md" | "lg";
+
 export interface PageProfile {
   displayName: string;
+  displayNameColor?: string;
   description: string;
-  descriptionFont: DescriptionFont;
+  descriptionFont?: DescriptionFont;
   descriptionColor: string;
+  descriptionBold?: boolean;
+  descriptionItalic?: boolean;
+  descriptionFontSize?: DescriptionFontSize;
   avatarDataUrl: string | null;
   /** Background behind display name */
   nameBackground: TextBackgroundStyle;
@@ -124,9 +130,13 @@ export function createDefaultPage(uid: string, username: string): PageDocument {
     is18Plus: false,
     profile: {
       displayName: username,
+      displayNameColor: "#111111",
       description: "Welcome to my links",
       descriptionFont: "geist",
       descriptionColor: "#666666",
+      descriptionBold: false,
+      descriptionItalic: false,
+      descriptionFontSize: "md",
       avatarDataUrl: null,
       nameBackground: defaultTextBackground("#ffffff"),
       descriptionBackground: defaultTextBackground("#ffffff"),
@@ -171,6 +181,10 @@ export function normalizePageDocument(raw: PageDocument): PageDocument {
     profile: {
       ...createDefaultPage(raw.uid, raw.username).profile,
       ...raw.profile,
+      displayNameColor: raw.profile?.displayNameColor || "#111111",
+      descriptionBold: Boolean(raw.profile?.descriptionBold),
+      descriptionItalic: Boolean(raw.profile?.descriptionItalic),
+      descriptionFontSize: raw.profile?.descriptionFontSize || "md",
       nameBackground: {
         ...defaultTextBackground(),
         ...raw.profile?.nameBackground,

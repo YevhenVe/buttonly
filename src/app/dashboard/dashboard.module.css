@@ -57,11 +57,39 @@
 .btn {
   border: 1px solid var(--border);
   background: var(--background);
+  color: var(--foreground);
   border-radius: 8px;
   padding: 0.4rem 0.75rem;
   font-weight: 600;
   font-size: 0.85rem;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--foreground) 6%, var(--background));
+}
+
+.themeToggleBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--foreground);
+  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.themeToggleBtn:hover {
+  background: color-mix(in srgb, var(--foreground) 8%, var(--background));
 }
 
 .btn:disabled {
@@ -163,14 +191,21 @@
   padding: 0 0.9rem;
   font-weight: 600;
   font-size: 0.85rem;
-  color: var(--muted);
+  color: var(--foreground);
+  opacity: 0.75;
   cursor: pointer;
+  transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.tab:hover {
+  opacity: 1;
 }
 
 .tabActive {
   background: var(--accent);
   color: var(--accent-text);
   border-color: transparent;
+  opacity: 1;
 }
 
 .panel {

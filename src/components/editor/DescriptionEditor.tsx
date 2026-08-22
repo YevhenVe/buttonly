@@ -1,6 +1,5 @@
 "use client";
 
-import { DESCRIPTION_FONTS } from "@/lib/types";
 import { usePageEditor } from "@/context/PageEditorProvider";
 import styles from "./editor.module.css";
 
@@ -93,6 +92,44 @@ export function DescriptionEditor() {
         />
       </div>
 
+      <div className={styles.field}>
+        <span className="label">Display name color</span>
+        <div className={styles.colorRow}>
+          <input
+            type="color"
+            value={
+              /^#[0-9a-fA-F]{6}$/.test(profile.displayNameColor || "")
+                ? profile.displayNameColor
+                : "#111111"
+            }
+            onChange={(e) =>
+              setPage((prev) => ({
+                ...prev,
+                profile: {
+                  ...prev.profile,
+                  displayNameColor: e.target.value,
+                },
+              }))
+            }
+            aria-label="Display name color"
+          />
+          <input
+            className={styles.input}
+            value={profile.displayNameColor || "#111111"}
+            onChange={(e) =>
+              setPage((prev) => ({
+                ...prev,
+                profile: {
+                  ...prev.profile,
+                  displayNameColor: e.target.value,
+                },
+              }))
+            }
+            spellCheck={false}
+          />
+        </div>
+      </div>
+
       <TextBgControls
         title="Display name"
         enabled={Boolean(nameBg.enabled)}
@@ -176,28 +213,100 @@ export function DescriptionEditor() {
 
       <div className={styles.row}>
         <div className={styles.field}>
-          <label htmlFor="descFont">Description font</label>
-          <select
-            id="descFont"
-            className={styles.select}
-            value={profile.descriptionFont}
-            onChange={(e) =>
-              setPage((prev) => ({
-                ...prev,
-                profile: {
-                  ...prev.profile,
-                  descriptionFont: e.target
-                    .value as typeof profile.descriptionFont,
-                },
-              }))
-            }
-          >
-            {DESCRIPTION_FONTS.map((f) => (
-              <option key={f.id} value={f.id}>
-                {f.label}
-              </option>
-            ))}
-          </select>
+          <span className="label">Description formatting</span>
+          <div className={styles.formatGroup}>
+            <button
+              type="button"
+              className={`${styles.formatBtn} ${
+                profile.descriptionBold ? styles.formatBtnActive : ""
+              }`}
+              style={{ fontWeight: 700 }}
+              onClick={() =>
+                setPage((prev) => ({
+                  ...prev,
+                  profile: {
+                    ...prev.profile,
+                    descriptionBold: !prev.profile.descriptionBold,
+                  },
+                }))
+              }
+              aria-label="Bold description"
+              title="Bold"
+            >
+              B
+            </button>
+            <button
+              type="button"
+              className={`${styles.formatBtn} ${
+                profile.descriptionItalic ? styles.formatBtnActive : ""
+              }`}
+              style={{ fontStyle: "italic", fontFamily: "serif" }}
+              onClick={() =>
+                setPage((prev) => ({
+                  ...prev,
+                  profile: {
+                    ...prev.profile,
+                    descriptionItalic: !prev.profile.descriptionItalic,
+                  },
+                }))
+              }
+              aria-label="Italic description"
+              title="Italic"
+            >
+              I
+            </button>
+            <div className={styles.toggle} role="group" aria-label="Font size">
+              <button
+                type="button"
+                className={
+                  (profile.descriptionFontSize || "md") === "sm"
+                    ? styles.active
+                    : ""
+                }
+                onClick={() =>
+                  setPage((prev) => ({
+                    ...prev,
+                    profile: { ...prev.profile, descriptionFontSize: "sm" },
+                  }))
+                }
+                title="Small"
+              >
+                S
+              </button>
+              <button
+                type="button"
+                className={
+                  (profile.descriptionFontSize || "md") === "md"
+                    ? styles.active
+                    : ""
+                }
+                onClick={() =>
+                  setPage((prev) => ({
+                    ...prev,
+                    profile: { ...prev.profile, descriptionFontSize: "md" },
+                  }))
+                }
+                title="Medium"
+              >
+                M
+              </button>
+              <button
+                type="button"
+                className={
+                  profile.descriptionFontSize === "lg" ? styles.active : ""
+                }
+                onClick={() =>
+                  setPage((prev) => ({
+                    ...prev,
+                    profile: { ...prev.profile, descriptionFontSize: "lg" },
+                  }))
+                }
+                title="Large"
+              >
+                L
+              </button>
+            </div>
+          </div>
         </div>
         <div className={styles.field}>
           <span className="label">Description color</span>
