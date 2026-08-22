@@ -4,10 +4,11 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { PageEditorProvider, usePageEditor } from "@/context/PageEditorProvider";
+import { DashboardThemeProvider } from "@/context/DashboardThemeProvider";
+import { DashboardThemeToggle } from "@/components/dashboard/DashboardThemeToggle";
 import { AvatarEditor } from "@/components/editor/AvatarEditor";
 import { DescriptionEditor } from "@/components/editor/DescriptionEditor";
 import { AgeRestrictedToggle } from "@/components/editor/AgeRestrictedToggle";
-import { ThemeToggle } from "@/components/editor/ThemeToggle";
 import { BackgroundEditor } from "@/components/editor/BackgroundEditor";
 import { ButtonRadiusSlider } from "@/components/editor/ButtonRadiusSlider";
 import { GroupsEditor } from "@/components/editor/GroupsEditor";
@@ -94,6 +95,7 @@ function DashboardInner() {
             ) : null}
           </div>
           <div className={styles.headerRight}>
+            <DashboardThemeToggle />
             <SaveControls />
             {publicPath ? (
               <button type="button" className={styles.btn} onClick={() => void copyLink()}>
@@ -157,7 +159,6 @@ function DashboardInner() {
               ) : null}
               {tab === "appearance" ? (
                 <div className={styles.stack}>
-                  <ThemeToggle />
                   <BackgroundEditor />
                   <ButtonRadiusSlider />
                 </div>
@@ -179,9 +180,11 @@ function DashboardInner() {
 export default function DashboardPage() {
   return (
     <AuthGuard>
-      <PageEditorProvider>
-        <DashboardInner />
-      </PageEditorProvider>
+      <DashboardThemeProvider>
+        <PageEditorProvider>
+          <DashboardInner />
+        </PageEditorProvider>
+      </DashboardThemeProvider>
     </AuthGuard>
   );
 }

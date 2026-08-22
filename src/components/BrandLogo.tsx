@@ -1,5 +1,10 @@
+"use client";
+
 import Link from "next/link";
-import logo from "@/assets/logo.svg";
+import { useEffect, useState } from "react";
+import logolight from "@/assets/logolight.svg";
+import logodark from "@/assets/logodark.svg";
+import { useDashboardTheme } from "@/context/DashboardThemeProvider";
 
 type BrandLogoProps = {
   href?: string;
@@ -13,7 +18,16 @@ export function BrandLogo({
   className,
   height = 36,
 }: BrandLogoProps) {
-  const src = typeof logo === "string" ? logo : logo.src;
+  const dashboardTheme = useDashboardTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = mounted && dashboardTheme ? dashboardTheme.theme === "dark" : false;
+  const currentLogo = isDark ? logodark : logolight;
+  const src = typeof currentLogo === "string" ? currentLogo : currentLogo.src;
 
   const image = (
     // eslint-disable-next-line @next/next/no-img-element

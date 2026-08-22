@@ -81,7 +81,6 @@ export function PublicPage({
   const body = (
     <div
       className={`${styles.root} ${preview ? styles.previewShell : ""}`}
-      data-theme={page.theme}
       style={themeVars(page)}
     >
       {background.type === "image" && background.imageDataUrl ? (
@@ -126,11 +125,12 @@ export function PublicPage({
               className={`${styles.displayName} ${
                 profile.nameBackground?.enabled ? styles.textWithBg : ""
               }`}
-              style={
-                profile.nameBackground?.enabled
+              style={{
+                color: profile.displayNameColor,
+                ...(profile.nameBackground?.enabled
                   ? { backgroundColor: profile.nameBackground.color }
-                  : undefined
-              }
+                  : {}),
+              }}
             >
               {profile.displayName || page.username}
             </h1>
@@ -143,7 +143,15 @@ export function PublicPage({
                 }`}
                 style={{
                   color: profile.descriptionColor,
-                  fontFamily: descriptionFontFamily(profile.descriptionFont),
+                  fontFamily: descriptionFontFamily(profile.descriptionFont || "geist"),
+                  fontWeight: profile.descriptionBold ? 700 : 400,
+                  fontStyle: profile.descriptionItalic ? "italic" : "normal",
+                  fontSize:
+                    profile.descriptionFontSize === "sm"
+                      ? "0.85rem"
+                      : profile.descriptionFontSize === "lg"
+                        ? "1.1rem"
+                        : "0.95rem",
                   ...(profile.descriptionBackground?.enabled
                     ? {
                         backgroundColor: profile.descriptionBackground.color,

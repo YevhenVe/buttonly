@@ -12,7 +12,9 @@
   justify-content: space-between;
   align-items: baseline;
   gap: 0.75rem;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--foreground);
   min-width: 0;
 }
 
