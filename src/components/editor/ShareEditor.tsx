@@ -47,10 +47,8 @@ export function ShareEditor() {
         <h3 className={styles.sectionTitle}>QR Code</h3>
         <label className={styles.switchRow}>
           <span className={styles.switchText}>
-            <strong>QR code</strong>
             <span className={styles.hint}>
-              Показывать QR-код для быстрого перехода на страницу вашего
-              профиля.
+              Show a QR code for quick access to your profile page.
             </span>
           </span>
           <button

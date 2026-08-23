@@ -4,6 +4,7 @@ import { descriptionFontFamily } from "@/lib/fonts";
 import { LinkButton } from "./LinkButton";
 import { ShareBar } from "./ShareBar";
 import { QRCodeCard } from "./QRCodeCard";
+import Link from "next/link";
 import { AgeGate } from "./AgeGate";
 import styles from "./PublicPage.module.css";
 
@@ -103,7 +104,7 @@ export function PublicPage({
       <div className={styles.content}>
         <div className={styles.inner}>
           <header className={styles.header}>
-            <div className={styles.avatarWrap}>
+            <Link href="/" className={styles.avatarWrap}>
               {profile.avatarDataUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -121,7 +122,7 @@ export function PublicPage({
                   18+
                 </span>
               ) : null}
-            </div>
+        </Link>
             <h1
               className={`${styles.displayName} ${
                 profile.nameBackground?.enabled ? styles.textWithBg : ""
