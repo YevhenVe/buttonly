@@ -2,13 +2,12 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
+  sendEmailVerification,
   GoogleAuthProvider,
   signOut,
   type User,
 } from "firebase/auth";
 import { getFirebaseAuth } from "./client";
-import { claimUsernameAndCreatePage } from "./pages";
-import { normalizeUsername, usernameError } from "../validation";
 
 function requireAuth() {
   const auth = getFirebaseAuth();
@@ -16,27 +15,18 @@ function requireAuth() {
   return auth;
 }
 
+/**
+ * Creates the account and mails a confirmation link. The public handle is
+ * claimed separately, once the address is confirmed — Firestore rules
+ * reject the claim until then, which is what blocks scripted sign-ups.
+ */
 export async function signUpWithEmail(
   email: string,
   password: string,
-  username: string,
 ): Promise<User> {
-  const err = usernameError(username);
-  if (err) throw new Error(err);
-
   const auth = requireAuth();
   const cred = await createUserWithEmailAndPassword(auth, email, password);
-  try {
-    await claimUsernameAndCreatePage(cred.user.uid, normalizeUsername(username));
-  } catch (e) {
-    // Roll back auth user if username claim fails
-    try {
-      await cred.user.delete();
-    } catch {
-      /* ignore */
-    }
-    throw e;
-  }
+  await sendEmailVerification(cred.user);
   return cred.user;
 }
 
@@ -49,26 +39,27 @@ export async function signInWithEmail(
   return cred.user;
 }
 
-export async function signInWithGoogle(username?: string): Promise<User> {
+export async function signInWithGoogle(): Promise<User> {
   const auth = requireAuth();
   const provider = new GoogleAuthProvider();
   const cred = await signInWithPopup(auth, provider);
-
-  // New Google users need a username to create their page.
-  if (username) {
-    const { userHasPage } = await import("./pages");
-    const hasPage = await userHasPage(cred.user.uid);
-    if (!hasPage) {
-      const err = usernameError(username);
-      if (err) throw new Error(err);
-      await claimUsernameAndCreatePage(
-        cred.user.uid,
-        normalizeUsername(username),
-      );
-    }
-  }
-
   return cred.user;
+}
+
+export async function resendVerification(user: User): Promise<void> {
+  await sendEmailVerification(user);
+}
+
+/**
+ * Re-reads the account after the user opens the emailed link. The ID token
+ * must be force-refreshed too: `reload()` alone updates `user.emailVerified`
+ * but leaves the cached token claiming `email_verified: false`, which is
+ * what Firestore rules actually read.
+ */
+export async function refreshVerification(user: User): Promise<boolean> {
+  await user.reload();
+  await user.getIdToken(true);
+  return user.emailVerified;
 }
 
 export async function logOut(): Promise<void> {

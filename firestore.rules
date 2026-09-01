@@ -10,17 +10,62 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == uid;
     }
 
+    // Anti-spam gate: a handle may only be claimed by a confirmed address.
+    // Google sign-in already arrives verified; password sign-up must open
+    // the emailed link first, which is what stops scripted handle squatting.
+    function verified() {
+      return signedIn() && request.auth.token.email_verified == true;
+    }
+
+    // Mirrors RESERVED_USERNAMES in src/lib/validation.ts so reserved
+    // handles cannot be taken by calling the SDK directly.
+    function validUsername(name) {
+      return name.matches('^[a-z0-9_]{3,20}$')
+        && !(name in [
+          'login', 'signup', 'dashboard', 'admin', 'api', 'settings',
+          'account', 'auth', 'u', 'app', 'www', 'static', 'public',
+          'assets', 'favicon', 'robots', 'sitemap', 'next', '_next'
+        ]);
+    }
+
+    // Avatars and backgrounds are stored inline as data URLs, so their
+    // length is the real storage-abuse vector. Limits sit above the
+    // client budgets in src/lib/image/compressImage.ts.
+    function withinSize(value, maxBytes) {
+      return value == null || (value is string && value.size() <= maxBytes);
+    }
+
+    function validPage(d) {
+      return d.keys().hasOnly([
+          'uid', 'username', 'updatedAt', 'is18Plus', 'qrCodeEnabled',
+          'profile', 'theme', 'background', 'buttonStyle',
+          'groupTitleStyle', 'groups', 'share', 'shareEnabled'
+        ])
+        && d.keys().hasAll(['uid', 'username', 'profile', 'background'])
+        && d.uid == request.auth.uid
+        && validUsername(d.username)
+        && d.get('groups', []).size() <= 20
+        && d.get('shareEnabled', []).size() <= 10
+        && d.profile.get('displayName', '').size() <= 60
+        && d.profile.get('description', '').size() <= 300
+        && withinSize(d.profile.get('avatarDataUrl', null), 200000)
+        && withinSize(d.background.get('imageDataUrl', null), 800000);
+    }
+
     // /usernames/{username} → { uid, createdAt }
     // Used to reserve a unique public handle.
     match /usernames/{username} {
-      allow get, list: if true;
+      // Public pages resolve a single handle by id; nobody needs to
+      // enumerate the collection to harvest or squat handles.
+      allow get: if true;
+      allow list: if false;
 
-      allow create: if signedIn()
+      allow create: if verified()
         && request.resource.data.keys().hasOnly(['uid', 'createdAt'])
         && request.resource.data.uid is string
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.createdAt is number
-        && username.matches('^[a-z0-9_]{3,20}$');
+        && validUsername(username);
 
       // No transfers / edits once claimed
       allow update, delete: if false;
@@ -28,11 +73,19 @@ service cloud.firestore {
 
     // /pages/{uid} → full page config (owner-only write)
     match /pages/{uid} {
-      allow get, list: if true;
+      allow get: if true;
+      allow list: if false;
 
-      allow create, update: if isOwner(uid)
-        && request.resource.data.uid == request.auth.uid
-        && request.resource.data.username is string;
+      allow create: if isOwner(uid)
+        && verified()
+        && validPage(request.resource.data);
+
+      // Editing is not gated on verified(): the handle is already claimed
+      // and immutable, and the payload stays bounded by validPage().
+      allow update: if isOwner(uid)
+        && validPage(request.resource.data)
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.username == resource.data.username;
 
       allow delete: if isOwner(uid);
     }

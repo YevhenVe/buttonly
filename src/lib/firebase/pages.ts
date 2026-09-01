@@ -3,10 +3,6 @@ import {
   getDoc,
   setDoc,
   updateDoc,
-  collection,
-  query,
-  where,
-  getDocs,
   runTransaction,
   type DocumentData,
   type UpdateData,
@@ -81,20 +77,6 @@ export async function getPageByUsername(
   if (!usernameSnap.exists()) return null;
   const { uid } = usernameSnap.data() as UsernameDoc;
   return getPageByUid(uid);
-}
-
-/** Fallback query if needed */
-export async function findPageByUsernameField(
-  username: string,
-): Promise<PageDocument | null> {
-  const db = requireDb();
-  const q = query(
-    collection(db, "pages"),
-    where("username", "==", normalizeUsername(username)),
-  );
-  const snap = await getDocs(q);
-  if (snap.empty) return null;
-  return snap.docs[0]!.data() as PageDocument;
 }
 
 /**
