@@ -1,17 +1,15 @@
 "use client";
 
-import { useEffect, useState, type FormEvent, Suspense } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { signInWithGoogle, signUpWithEmail } from "@/lib/firebase/auth";
 import { authErrorMessage } from "@/lib/firebase/authErrors";
-import {
-  claimUsernameAndCreatePage,
-  userHasPage,
-} from "@/lib/firebase/pages";
+import { claimUsernameAndCreatePage, userHasPage } from "@/lib/firebase/pages";
 import { normalizeUsername, usernameError } from "@/lib/validation";
 import { useAuth } from "@/context/AuthProvider";
 import { FirebaseMissing } from "@/components/ui/FirebaseMissing";
+import { VerifyEmailNotice } from "@/components/auth/VerifyEmailNotice";
 import {
   MarketingShell,
   marketingStyles as shell,
@@ -41,17 +39,18 @@ function GoogleGlyph() {
   );
 }
 
-function SignupForm() {
+export default function SignupPage() {
   const { user, loading, configured } = useAuth();
   const router = useRouter();
-  const params = useSearchParams();
-  const googleMode = params.get("google") === "1";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Set by VerifyEmailNotice: reload() mutates the same User object, so the
+  // context alone never re-renders this page.
+  const [verified, setVerified] = useState(false);
 
   useEffect(() => {
     if (loading || !user) return;
@@ -62,22 +61,23 @@ function SignupForm() {
 
   if (!configured) return <FirebaseMissing />;
 
+  // Signed in but no page yet → only the username step is left.
+  const hasAccount = !!user;
+
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setBusy(true);
     setError(null);
     try {
-      const unameErr = usernameError(username);
-      if (unameErr) throw new Error(unameErr);
-
-      if (user && googleMode) {
+      if (user) {
+        const unameErr = usernameError(username);
+        if (unameErr) throw new Error(unameErr);
         await claimUsernameAndCreatePage(user.uid, normalizeUsername(username));
         router.replace("/dashboard");
         return;
       }
-
-      await signUpWithEmail(email, password, username);
-      router.replace("/dashboard");
+      // Username is validated again after confirmation, before the claim.
+      await signUpWithEmail(email, password);
     } catch (err: unknown) {
       setError(authErrorMessage(err));
     } finally {
@@ -91,7 +91,10 @@ function SignupForm() {
     try {
       const unameErr = usernameError(username);
       if (unameErr) throw new Error(unameErr);
-      await signInWithGoogle(normalizeUsername(username));
+      const u = await signInWithGoogle();
+      if (!(await userHasPage(u.uid))) {
+        await claimUsernameAndCreatePage(u.uid, normalizeUsername(username));
+      }
       router.replace("/dashboard");
     } catch (err: unknown) {
       setError(authErrorMessage(err));
@@ -103,101 +106,89 @@ function SignupForm() {
   return (
     <MarketingShell active="signup">
       <div className={`${shell.panel} ${shell.panelNarrow}`}>
-        <form className={styles.card} onSubmit={(e) => void onSubmit(e)}>
-          <h1>{googleMode ? "Choose a username" : "Create your page"}</h1>
-          <p>
-            Pick a unique username. Your public link will be{" "}
-            <strong>/{username || "you"}</strong>
-          </p>
+        {user && !user.emailVerified && !verified ? (
+          <VerifyEmailNotice user={user} onVerified={() => setVerified(true)} />
+        ) : (
+          <form className={styles.card} onSubmit={(e) => void onSubmit(e)}>
+            <h1>{hasAccount ? "Choose a username" : "Create your page"}</h1>
+            <p>
+              Pick a unique username. Your public link will be{" "}
+              <strong>/{username || "you"}</strong>
+            </p>
 
-          <div className={styles.field}>
-            <label htmlFor="username">Username</label>
-            <input
-              id="username"
-              className={styles.input}
-              value={username}
-              onChange={(e) => setUsername(e.target.value.toLowerCase())}
-              placeholder="yourname"
-              required
-              minLength={3}
-              maxLength={20}
-              pattern="[a-z0-9_]{3,20}"
-              autoComplete="username"
-            />
-          </div>
+            <div className={styles.field}>
+              <label htmlFor="username">Username</label>
+              <input
+                id="username"
+                className={styles.input}
+                value={username}
+                onChange={(e) => setUsername(e.target.value.toLowerCase())}
+                placeholder="yourname"
+                required
+                minLength={3}
+                maxLength={20}
+                pattern="[a-z0-9_]{3,20}"
+                autoComplete="username"
+              />
+            </div>
 
-          {!googleMode && !user ? (
-            <>
-              <div className={styles.field}>
-                <label htmlFor="email">Email</label>
-                <input
-                  id="email"
-                  className={styles.input}
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-              <div className={styles.field}>
-                <label htmlFor="password">Password</label>
-                <input
-                  id="password"
-                  className={styles.input}
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  minLength={6}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-            </>
-          ) : null}
+            {!hasAccount ? (
+              <>
+                <div className={styles.field}>
+                  <label htmlFor="email">Email</label>
+                  <input
+                    id="email"
+                    className={styles.input}
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+                <div className={styles.field}>
+                  <label htmlFor="password">Password</label>
+                  <input
+                    id="password"
+                    className={styles.input}
+                    type="password"
+                    autoComplete="new-password"
+                    required
+                    minLength={6}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+              </>
+            ) : null}
 
-          {error ? <p className={styles.error}>{error}</p> : null}
+            {error ? <p className={styles.error}>{error}</p> : null}
 
-          <button className={styles.btn} type="submit" disabled={busy}>
-            {busy ? "Creating…" : googleMode ? "Continue" : "Sign up"}
-          </button>
+            <button className={styles.btn} type="submit" disabled={busy}>
+              {busy ? "Working…" : hasAccount ? "Continue" : "Sign up"}
+            </button>
 
-          {!googleMode && !user ? (
-            <>
-              <p className={styles.divider}>or</p>
-              <button
-                type="button"
-                className={`${styles.btn} ${styles.btnGoogle}`}
-                disabled={busy}
-                onClick={() => void onGoogle()}
-              >
-                <GoogleGlyph />
-                Sign up with Google
-              </button>
-            </>
-          ) : null}
+            {!hasAccount ? (
+              <>
+                <p className={styles.divider}>or</p>
+                <button
+                  type="button"
+                  className={`${styles.btn} ${styles.btnGoogle}`}
+                  disabled={busy}
+                  onClick={() => void onGoogle()}
+                >
+                  <GoogleGlyph />
+                  Sign up with Google
+                </button>
+              </>
+            ) : null}
 
-          <p className={styles.footer}>
-            Already have an account? <Link href="/login">Log in</Link>
-          </p>
-        </form>
+            <p className={styles.footer}>
+              Already have an account? <Link href="/login">Log in</Link>
+            </p>
+          </form>
+        )}
       </div>
     </MarketingShell>
-  );
-}
-
-export default function SignupPage() {
-  return (
-    <Suspense
-      fallback={
-        <MarketingShell>
-          <div className={`${shell.panel} ${shell.panelNarrow}`}>
-            <p className={shell.panelLead}>Loading…</p>
-          </div>
-        </MarketingShell>
-      }
-    >
-      <SignupForm />
-    </Suspense>
   );
 }

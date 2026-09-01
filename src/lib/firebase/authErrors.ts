@@ -16,7 +16,7 @@ export function authErrorMessage(err: unknown): string {
     code === "permission-denied" ||
     /missing or insufficient permissions/i.test(raw)
   ) {
-    return "Firestore blocked this write. Open Firebase Console → Firestore → Rules, paste the contents of firestore.rules from this project, click Publish, then try again.";
+    return "Firestore rejected this write. Confirm your email address first — if it is already confirmed, the page content may be too large, or firestore.rules is not published yet.";
   }
 
   switch (code) {

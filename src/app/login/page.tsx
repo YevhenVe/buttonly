@@ -72,7 +72,7 @@ export default function LoginPage() {
       const u = await signInWithGoogle();
       const hasPage = await userHasPage(u.uid);
       if (!hasPage) {
-        router.replace("/signup?google=1");
+        router.replace("/signup");
         return;
       }
       router.replace("/dashboard");

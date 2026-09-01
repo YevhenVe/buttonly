@@ -146,7 +146,7 @@ function DashboardInner() {
           ) : !page ? (
             <div className={styles.missingPage}>
               <p>No page found for this account.</p>
-              <Link href="/signup?google=1">Claim a username</Link>
+              <Link href="/signup">Claim a username</Link>
             </div>
           ) : (
             <>
