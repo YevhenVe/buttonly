@@ -49,6 +49,9 @@ function themeVars(page: PageDocument): CSSProperties {
       ? "rgba(23, 23, 23, 0.92)"
       : "rgba(255, 255, 255, 0.92)",
     ["--button-radius" as string]: `${radius}px`,
+    ["--button-corner-shape" as string]: page.buttonStyle.squircle
+      ? "squircle"
+      : "round",
     ["--button-opacity" as string]: String(opacity / 100),
     ["--button-blur" as string]: `${blur}px`,
     ["--button-surface-rgb" as string]: surfaceRgb,

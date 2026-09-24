@@ -103,6 +103,7 @@ export function buildPageUpdate(
     "buttonStyle.blur": n.buttonStyle.blur,
     "buttonStyle.backgroundColor": n.buttonStyle.backgroundColor ?? "#ffffff",
     "buttonStyle.textColor": n.buttonStyle.textColor ?? "#111111",
+    "buttonStyle.squircle": Boolean(n.buttonStyle.squircle),
     "profile.displayName": n.profile.displayName,
     "profile.displayNameColor": n.profile.displayNameColor ?? "#111111",
     "profile.description": n.profile.description,
