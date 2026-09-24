@@ -75,6 +75,8 @@ export interface ButtonStyle {
   backgroundColor: string;
   /** Button label color (hex). */
   textColor: string;
+  /** When true, buttons use iOS-style squircle corners (CSS corner-shape) where supported. */
+  squircle: boolean;
 }
 
 export type ShareLinks = Partial<Record<SharePlatform, string>>;
@@ -158,6 +160,7 @@ export function createDefaultPage(uid: string, username: string): PageDocument {
       blur: 0,
       backgroundColor: "#ffffff",
       textColor: "#111111",
+      squircle: false,
     },
     groupTitleStyle: {
       background: defaultTextBackground("#ffffff"),
@@ -212,6 +215,7 @@ export function normalizePageDocument(raw: PageDocument): PageDocument {
     buttonStyle: {
       ...createDefaultPage(raw.uid, raw.username).buttonStyle,
       ...raw.buttonStyle,
+      squircle: Boolean(raw.buttonStyle?.squircle),
     },
     groupTitleStyle: {
       background: {

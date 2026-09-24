@@ -84,6 +84,7 @@ Unified `PageDocument` structure:
     blur: number;
     backgroundColor: string;
     textColor: string;
+    squircle: boolean;
   };
   groupTitleStyle: {
     background: string;

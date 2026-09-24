@@ -223,6 +223,14 @@
   filter: brightness(1.03);
 }
 
+/* iOS-style squircle corners where supported (Chrome/Edge 139+).
+   Other browsers ignore this and keep the standard border-radius. */
+@supports (corner-shape: squircle) {
+  .linkButton {
+    corner-shape: var(--button-corner-shape, round);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .linkButton {
     transition: background 0.2s ease, border-color 0.2s ease;

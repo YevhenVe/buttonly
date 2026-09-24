@@ -18,6 +18,7 @@ export function ButtonRadiusSlider() {
   const borderRadius = clamp(style.borderRadius ?? 12, 0, 40);
   const backgroundColor = style.backgroundColor || "#ffffff";
   const textColor = style.textColor || "#111111";
+  const squircle = Boolean(style.squircle);
 
   const patch = (partial: Partial<typeof style>) => {
     setPage((prev) => ({
@@ -110,6 +111,26 @@ export function ButtonRadiusSlider() {
       <p className={styles.hint}>
         Backdrop blur (frosted-glass look). Works best with some transparency.
       </p>
+
+      <label className={styles.switchRow} style={{ marginTop: "0.75rem" }}>
+        <span className={styles.switchText}>
+          <strong>iOS-style squircle</strong>
+          <span className={styles.hint}>
+            Continuous corners like on iOS. Works in modern Chrome/Edge; other
+            browsers fall back to the standard corner radius.
+          </span>
+        </span>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={squircle}
+          aria-label="iOS-style squircle corners"
+          className={`${styles.switch} ${squircle ? styles.switchOn : ""}`}
+          onClick={() => patch({ squircle: !squircle })}
+        >
+          <span className={styles.switchThumb} />
+        </button>
+      </label>
     </div>
   );
 }
