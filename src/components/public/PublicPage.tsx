@@ -22,20 +22,26 @@ function hexToRgbTriplet(hex: string, fallback: string): string {
   return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;
 }
 
-function themeVars(page: PageDocument): CSSProperties {
+function buttonMetrics(page: PageDocument) {
   const isDark = page.theme === "dark";
   const opacity = Math.min(100, Math.max(0, page.buttonStyle.opacity ?? 92));
   const blur = Math.min(24, Math.max(0, page.buttonStyle.blur ?? 0));
   const radius = Math.min(40, Math.max(0, page.buttonStyle.borderRadius ?? 12));
 
   const defaultBg = isDark ? "#171717" : "#ffffff";
-  const defaultText = isDark ? "#ededed" : "#111111";
   const bgHex = page.buttonStyle.backgroundColor || defaultBg;
-  const textHex = page.buttonStyle.textColor || defaultText;
   const surfaceRgb = hexToRgbTriplet(
     bgHex,
     isDark ? "23, 23, 23" : "255, 255, 255",
   );
+  return { isDark, opacity, blur, radius, surfaceRgb };
+}
+
+function themeVars(page: PageDocument): CSSProperties {
+  const { isDark, opacity, blur, radius, surfaceRgb } = buttonMetrics(page);
+
+  const defaultText = isDark ? "#ededed" : "#111111";
+  const textHex = page.buttonStyle.textColor || defaultText;
 
   return {
     ["--page-bg-color" as string]:
@@ -72,6 +78,16 @@ export function PublicPage({
   const { background, profile } = page;
   const groups = [...page.groups].sort((a, b) => a.order - b.order);
   const is18Plus = Boolean(page.is18Plus);
+  // Liquid glass material for link buttons (simple-liquid-glass). The library
+  // renders the refractive surface; the anchor inside stays transparent.
+  const bm = buttonMetrics(page);
+  const glass = page.buttonStyle.liquidGlass
+    ? {
+        surfaceColor: `rgba(${bm.surfaceRgb}, ${bm.opacity / 100})`,
+        blur: bm.blur,
+        radius: bm.radius,
+      }
+    : undefined;
   const zoom = Math.min(200, Math.max(50, background.zoom ?? 100));
   const zoomScale = zoom / 100;
   // Extra scale when blurred so soft edges don't show empty corners
@@ -206,6 +222,7 @@ export function PublicPage({
                         iconUrl={btn.iconUrl}
                         is18Plus={Boolean(btn.is18Plus)}
                         preview={preview}
+                        glass={glass}
                       />
                     ))}
                   </div>

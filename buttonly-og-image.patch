@@ -1,0 +1,419 @@
+diff --git a/README.md b/README.md
+index 0cff2c5..bf57aba 100644
+--- a/README.md
++++ b/README.md
+@@ -39,6 +39,12 @@ NEXT_PUBLIC_FIREBASE_APP_ID=
+ ```
+ *Note: Protect data with Firestore rules, not by hiding these keys. Never commit `.env.local`.*
+ 
++For correct link previews (og:image) in production, also set your public site URL:
++```bash
++NEXT_PUBLIC_SITE_URL=https://yourdomain.com
++```
++Without it, `metadataBase` falls back to `VERCEL_URL` on Vercel, or `http://localhost:3000` locally.
++
+ ### 3. Firebase Configuration
+ 1. **Firestore Rules:** Replace default rules with the contents of `firestore.rules` from this repo and publish.
+ 2. **Auth:** Enable **Email/Password** and **Google** sign-in providers in the Firebase Console. Add `localhost` (and your production domain) to Authorized domains.
+diff --git a/src/app/[username]/opengraph-image.tsx b/src/app/[username]/opengraph-image.tsx
+new file mode 100644
+index 0000000..d1c476c
+--- /dev/null
++++ b/src/app/[username]/opengraph-image.tsx
+@@ -0,0 +1,83 @@
++import { ImageResponse } from "next/og";
++import { OgCard } from "@/components/public/OgCard";
++import { getOgFonts } from "@/lib/og-font";
++import { getPageByUsername } from "@/lib/firebase/pages";
++import { isFirebaseConfigured } from "@/lib/firebase/client";
++import type { PageDocument } from "@/lib/types";
++import {
++  isValidUsername,
++  normalizeUsername,
++  RESERVED_USERNAMES,
++} from "@/lib/validation";
++
++/**
++ * Dynamic Open Graph image for a public page: `/{username}/opengraph-image`.
++ * Next.js picks this file up automatically and serves it as the page's
++ * og:image (and twitter:image fallback) — no manual meta tags needed.
++ *
++ * Renders the page's background (image or color), avatar, display name,
++ * description and first link titles at 1200×630.
++ */
++
++export const runtime = "nodejs";
++export const size = { width: 1200, height: 630 };
++export const contentType = "image/png";
++export const alt = "Buttonly link page preview";
++
++function truncate(s: string, max: number): string {
++  const t = s.trim().replace(/\s+/g, " ");
++  return t.length > max ? t.slice(0, max - 1).trimEnd() + "…" : t;
++}
++
++export default async function OpengraphImage({
++  params,
++}: {
++  params: Promise<{ username: string }>;
++}) {
++  const { username: raw } = await params;
++  const username = normalizeUsername(raw ?? "");
++
++  let page: PageDocument | null = null;
++  if (
++    username &&
++    !RESERVED_USERNAMES.has(username) &&
++    isValidUsername(username) &&
++    isFirebaseConfigured()
++  ) {
++    try {
++      page = await getPageByUsername(username);
++    } catch {
++      page = null;
++    }
++  }
++
++  const fonts = await getOgFonts();
++
++  const links = (page?.groups ?? [])
++    .flatMap((g) => g.buttons.map((b) => b.label))
++    .filter(Boolean)
++    .slice(0, 3)
++    .map((t) => truncate(t, 22));
++
++  return new ImageResponse(
++    (
++      <OgCard
++        data={{
++          displayName: truncate(page?.profile.displayName || username || "Buttonly", 28),
++          username: username || "buttonly",
++          description: page?.profile.description
++            ? truncate(page.profile.description, 110)
++            : undefined,
++          avatarDataUrl: page?.profile.avatarDataUrl ?? null,
++          backgroundColor: page?.background.color || "#111827",
++          backgroundImageDataUrl:
++            page?.background.type === "image"
++              ? (page.background.imageDataUrl ?? null)
++              : null,
++          links,
++        }}
++      />
++    ),
++    { ...size, fonts },
++  );
++}
+diff --git a/src/app/[username]/page.tsx b/src/app/[username]/page.tsx
+index 9e2cc29..89ae539 100644
+--- a/src/app/[username]/page.tsx
++++ b/src/app/[username]/page.tsx
+@@ -1,6 +1,7 @@
+ import { unstable_cache } from "next/cache";
+ import { cookies } from "next/headers";
+ import { notFound } from "next/navigation";
++import type { Metadata } from "next";
+ import { PublicPage } from "@/components/public/PublicPage";
+ import { FirebaseMissing } from "@/components/ui/FirebaseMissing";
+ import { AGE_CONFIRM_KEY, AGE_CONFIRM_VALUE } from "@/lib/ageGate";
+@@ -30,6 +31,43 @@ function loadCachedPageByUsername(username: string) {
+   )(username);
+ }
+ 
++/**
++ * Open Graph / Twitter Card tags for link previews (messengers, socials).
++ * The og:image itself comes from the ./opengraph-image file convention.
++ */
++export async function generateMetadata({
++  params,
++}: {
++  params: Promise<{ username: string }>;
++}): Promise<Metadata> {
++  const { username: raw } = await params;
++  const username = normalizeUsername(raw ?? "");
++  if (
++    !username ||
++    RESERVED_USERNAMES.has(username) ||
++    !isValidUsername(username)
++  ) {
++    return {};
++  }
++  if (!isFirebaseConfigured()) return {};
++  let page: PageDocument | null;
++  try {
++    page = await loadCachedPageByUsername(username);
++  } catch {
++    return {};
++  }
++  if (!page) return {};
++  const title = page.profile.displayName?.trim() || `@${username}`;
++  const description =
++    page.profile.description?.trim() || `Links by ${title} on Buttonly`;
++  return {
++    title,
++    description,
++    openGraph: { title, description, type: "profile", username },
++    twitter: { card: "summary_large_image", title, description },
++  };
++}
++
+ export default async function UserPublicPage({
+   params,
+ }: {
+diff --git a/src/app/layout.tsx b/src/app/layout.tsx
+index 7a12eb4..6d4a6ca 100644
+--- a/src/app/layout.tsx
++++ b/src/app/layout.tsx
+@@ -26,7 +26,20 @@ const sourceSerif = Source_Serif_4({
+   subsets: ["latin"],
+ });
+ 
++/**
++ * Base URL for absolute metadata URLs (og:image etc.).
++ * Set NEXT_PUBLIC_SITE_URL in production (e.g. https://yourdomain.com).
++ * Falls back to VERCEL_URL on Vercel, localhost otherwise.
++ */
++function siteUrl(): string {
++  const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/+$/, "");
++  if (fromEnv) return fromEnv;
++  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
++  return "http://localhost:3000";
++}
++
+ export const metadata: Metadata = {
++  metadataBase: new URL(siteUrl()),
+   title: {
+     default: "Buttonly",
+     template: "%s · Buttonly",
+diff --git a/src/components/public/OgCard.tsx b/src/components/public/OgCard.tsx
+new file mode 100644
+index 0000000..bdfea19
+--- /dev/null
++++ b/src/components/public/OgCard.tsx
+@@ -0,0 +1,162 @@
++/**
++ * 1200×630 Open Graph card for a public Buttonly page.
++ *
++ * Rendered by Satori (via next/og), so only a subset of CSS is supported:
++ * flexbox layout, absolute positioning, inline styles. Text must already be
++ * truncated — Satori has no ellipsis.
++ */
++
++export interface OgCardData {
++  displayName: string;
++  username: string;
++  description?: string;
++  avatarDataUrl?: string | null;
++  backgroundColor: string;
++  backgroundImageDataUrl?: string | null;
++  /** Up to 3 link titles, rendered as pills. */
++  links: string[];
++}
++
++export function OgCard({ data }: { data: OgCardData }) {
++  const {
++    displayName,
++    username,
++    description,
++    avatarDataUrl,
++    backgroundColor,
++    backgroundImageDataUrl,
++    links,
++  } = data;
++
++  return (
++    <div
++      style={{
++        width: 1200,
++        height: 630,
++        display: "flex",
++        position: "relative",
++        overflow: "hidden",
++        backgroundColor,
++        fontFamily: "Inter",
++      }}
++    >
++      {backgroundImageDataUrl ? (
++        <img
++          src={backgroundImageDataUrl}
++          width={1200}
++          height={630}
++          style={{ position: "absolute", top: 0, left: 0, objectFit: "cover" }}
++        />
++      ) : null}
++
++      {/* Readability scrim over the background */}
++      <div
++        style={{
++          position: "absolute",
++          top: 0,
++          left: 0,
++          width: 1200,
++          height: 630,
++          backgroundImage:
++            "linear-gradient(to bottom, rgba(0,0,0,0.30), rgba(0,0,0,0.62))",
++        }}
++      />
++
++      <div
++        style={{
++          position: "absolute",
++          top: 0,
++          left: 0,
++          width: 1200,
++          height: 630,
++          display: "flex",
++          flexDirection: "column",
++          alignItems: "center",
++          justifyContent: "center",
++          padding: "48px 72px",
++        }}
++      >
++        {avatarDataUrl ? (
++          <img
++            src={avatarDataUrl}
++            width={168}
++            height={168}
++            style={{
++              borderRadius: "50%",
++              objectFit: "cover",
++              border: "6px solid rgba(255,255,255,0.9)",
++              marginBottom: 24,
++            }}
++          />
++        ) : null}
++
++        <div
++          style={{
++            fontSize: 72,
++            fontWeight: 800,
++            color: "#ffffff",
++            lineHeight: 1.1,
++            textAlign: "center",
++          }}
++        >
++          {displayName}
++        </div>
++
++        <div
++          style={{
++            fontSize: 32,
++            fontWeight: 600,
++            color: "rgba(255,255,255,0.8)",
++            marginTop: 10,
++          }}
++        >
++          {`@${username}`}
++        </div>
++
++        {description ? (
++          <div
++            style={{
++              fontSize: 28,
++              fontWeight: 400,
++              color: "rgba(255,255,255,0.88)",
++              marginTop: 18,
++              textAlign: "center",
++              lineHeight: 1.35,
++              maxWidth: 880,
++            }}
++          >
++            {description}
++          </div>
++        ) : null}
++
++        {links.length > 0 ? (
++          <div
++            style={{
++              display: "flex",
++              flexDirection: "row",
++              gap: 14,
++              marginTop: 32,
++            }}
++          >
++            {links.map((title) => (
++              <div
++                key={title}
++                style={{
++                  fontSize: 26,
++                  fontWeight: 600,
++                  color: "#ffffff",
++                  backgroundColor: "rgba(255,255,255,0.18)",
++                  border: "2px solid rgba(255,255,255,0.4)",
++                  borderRadius: 999,
++                  padding: "12px 28px",
++                }}
++              >
++                {title}
++              </div>
++            ))}
++          </div>
++        ) : null}
++      </div>
++    </div>
++  );
++}
+diff --git a/src/lib/og-font.ts b/src/lib/og-font.ts
+new file mode 100644
+index 0000000..264310f
+--- /dev/null
++++ b/src/lib/og-font.ts
+@@ -0,0 +1,58 @@
++/**
++ * Inter font buffers for OG image rendering.
++ *
++ * Satori (used by next/og) cannot use system fonts — every weight must be
++ * supplied as an ArrayBuffer. The latin TTF files are fetched once from
++ * Google Fonts and cached for the lifetime of the server instance.
++ *
++ * NOTE: the css2 API is queried with a neutral User-Agent on purpose.
++ * A browser UA makes Google return woff2, which the font parser bundled
++ * with next/og cannot read ("Unsupported OpenType signature wOF2").
++ * A neutral UA returns TTF, which works.
++ */
++
++interface OgFont {
++  name: string;
++  data: ArrayBuffer;
++  weight: 400 | 800;
++  style: "normal";
++}
++
++let cached: Promise<OgFont[]> | null = null;
++
++/** Extract the TTF URL for a given weight from a css2 response. */
++function ttfUrl(css: string, weight: number): string | null {
++  const blocks = css.split("@font-face");
++  for (let i = 1; i < blocks.length; i++) {
++    const face = blocks[i].slice(0, blocks[i].indexOf("}") + 1);
++    if (face.includes(`font-weight: ${weight};`)) {
++      return face.match(/url\((https:[^)]+)\)/)?.[1] ?? null;
++    }
++  }
++  return null;
++}
++
++export function getOgFonts(): Promise<OgFont[]> {
++  if (!cached) {
++    cached = (async () => {
++      const css = await (
++        await fetch(
++          "https://fonts.googleapis.com/css2?family=Inter:wght@400;800&display=swap",
++          { headers: { "User-Agent": "Buttonly-og/1.0" } },
++        )
++      ).text();
++      const fonts: OgFont[] = [];
++      for (const weight of [400, 800] as const) {
++        const url = ttfUrl(css, weight);
++        if (!url)
++          throw new Error(
++            `Inter ${weight} TTF URL not found in css2 response`,
++          );
++        const data = await (await fetch(url)).arrayBuffer();
++        fonts.push({ name: "Inter", data, weight, style: "normal" });
++      }
++      return fonts;
++    })();
++  }
++  return cached;
++}

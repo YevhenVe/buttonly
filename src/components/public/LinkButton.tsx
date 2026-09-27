@@ -1,8 +1,19 @@
 "use client";
 
 import { useState, type MouseEvent } from "react";
+import { LiquidGlass } from "simple-liquid-glass";
 import { faviconUrlFromLink } from "@/lib/icons";
 import styles from "./PublicPage.module.css";
+
+/** Liquid glass material for a link button (simple-liquid-glass). */
+export interface LinkButtonGlass {
+  /** Button surface color as an rgba() string. */
+  surfaceColor: string;
+  /** Backdrop blur in px. */
+  blur: number;
+  /** Corner radius in px. */
+  radius: number;
+}
 
 function LinkIconFallback() {
   return (
@@ -26,12 +37,14 @@ export function LinkButton({
   iconUrl,
   is18Plus = false,
   preview = false,
+  glass,
 }: {
   label: string;
   url: string;
   iconUrl?: string | null;
   is18Plus?: boolean;
   preview?: boolean;
+  glass?: LinkButtonGlass;
 }) {
   const resolved = iconUrl || faviconUrlFromLink(url);
   const [failed, setFailed] = useState(false);
@@ -53,35 +66,50 @@ export function LinkButton({
     setShowWarning(true);
   };
 
+  const anchor = (
+    <a
+      className={`${styles.linkButton} ${is18Plus ? styles.linkButtonAdult : ""} ${glass ? styles.linkButtonGlass : ""}`}
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={onClick}
+    >
+      {resolved && !failed ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          className={styles.linkIcon}
+          src={resolved}
+          alt=""
+          width={22}
+          height={22}
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <LinkIconFallback />
+      )}
+      <span className={styles.linkLabel}>{label}</span>
+      {is18Plus ? (
+        <span className={styles.linkAdultBadge} title="18+ content">
+          18+
+        </span>
+      ) : null}
+    </a>
+  );
+
   return (
     <>
-      <a
-        className={`${styles.linkButton} ${is18Plus ? styles.linkButtonAdult : ""}`}
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={onClick}
-      >
-        {resolved && !failed ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            className={styles.linkIcon}
-            src={resolved}
-            alt=""
-            width={22}
-            height={22}
-            onError={() => setFailed(true)}
-          />
-        ) : (
-          <LinkIconFallback />
-        )}
-        <span className={styles.linkLabel}>{label}</span>
-        {is18Plus ? (
-          <span className={styles.linkAdultBadge} title="18+ content">
-            18+
-          </span>
-        ) : null}
-      </a>
+      {glass ? (
+        <LiquidGlass
+          className={styles.liquidGlass}
+          radius={glass.radius}
+          glassColor={glass.surfaceColor}
+          blur={glass.blur}
+        >
+          {anchor}
+        </LiquidGlass>
+      ) : (
+        anchor
+      )}
 
       {showWarning ? (
         <div

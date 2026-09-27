@@ -26,7 +26,20 @@ const sourceSerif = Source_Serif_4({
   subsets: ["latin"],
 });
 
+/**
+ * Base URL for absolute metadata URLs (og:image etc.).
+ * Set NEXT_PUBLIC_SITE_URL in production (e.g. https://yourdomain.com).
+ * Falls back to VERCEL_URL on Vercel, localhost otherwise.
+ */
+function siteUrl(): string {
+  const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/+$/, "");
+  if (fromEnv) return fromEnv;
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return "http://localhost:3000";
+}
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl()),
   title: {
     default: "Buttonly",
     template: "%s · Buttonly",

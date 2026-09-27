@@ -19,6 +19,7 @@ export function ButtonRadiusSlider() {
   const backgroundColor = style.backgroundColor || "#ffffff";
   const textColor = style.textColor || "#111111";
   const squircle = Boolean(style.squircle);
+  const liquidGlass = Boolean(style.liquidGlass);
 
   const patch = (partial: Partial<typeof style>) => {
     setPage((prev) => ({
@@ -106,10 +107,12 @@ export function ButtonRadiusSlider() {
         value={blur}
         min={0}
         max={24}
+        disabled={liquidGlass}
         onChange={(blur) => patch({ blur })}
       />
       <p className={styles.hint}>
         Backdrop blur (frosted-glass look). Works best with some transparency.
+        Has no effect while Liquid glass is on.
       </p>
 
       <label className={styles.switchRow} style={{ marginTop: "0.75rem" }}>
@@ -117,7 +120,8 @@ export function ButtonRadiusSlider() {
           <strong>iOS-style squircle</strong>
           <span className={styles.hint}>
             Continuous corners like on iOS. Works in modern Chrome/Edge; other
-            browsers fall back to the standard corner radius.
+            browsers fall back to the standard corner radius. Can't be combined
+            with Liquid glass.
           </span>
         </span>
         <button
@@ -126,7 +130,42 @@ export function ButtonRadiusSlider() {
           aria-checked={squircle}
           aria-label="iOS-style squircle corners"
           className={`${styles.switch} ${squircle ? styles.switchOn : ""}`}
-          onClick={() => patch({ squircle: !squircle })}
+          disabled={liquidGlass}
+          onClick={() =>
+            patch(
+              squircle
+                ? { squircle: false }
+                : { squircle: true, liquidGlass: false },
+            )
+          }
+        >
+          <span className={styles.switchThumb} />
+        </button>
+      </label>
+
+      <label className={styles.switchRow} style={{ marginTop: "0.75rem" }}>
+        <span className={styles.switchText}>
+          <strong>Liquid glass</strong>
+          <span className={styles.hint}>
+            iOS 26-style glass refraction on buttons. Full effect in
+            Chrome/Edge; other browsers fall back to frosted glass. Can't be
+            combined with iOS-style squircle.
+          </span>
+        </span>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={liquidGlass}
+          aria-label="Liquid glass refraction on buttons"
+          className={`${styles.switch} ${liquidGlass ? styles.switchOn : ""}`}
+          disabled={squircle}
+          onClick={() =>
+            patch(
+              liquidGlass
+                ? { liquidGlass: false }
+                : { liquidGlass: true, squircle: false },
+            )
+          }
         >
           <span className={styles.switchThumb} />
         </button>

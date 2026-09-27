@@ -39,6 +39,12 @@ NEXT_PUBLIC_FIREBASE_APP_ID=
 ```
 *Note: Protect data with Firestore rules, not by hiding these keys. Never commit `.env.local`.*
 
+For correct link previews (og:image) in production, also set your public site URL:
+```bash
+NEXT_PUBLIC_SITE_URL=https://yourdomain.com
+```
+Without it, `metadataBase` falls back to `VERCEL_URL` on Vercel, or `http://localhost:3000` locally.
+
 ### 3. Firebase Configuration
 1. **Firestore Rules:** Replace default rules with the contents of `firestore.rules` from this repo and publish.
 2. **Auth:** Enable **Email/Password** and **Google** sign-in providers in the Firebase Console. Add `localhost` (and your production domain) to Authorized domains.
@@ -85,6 +91,7 @@ Unified `PageDocument` structure:
     backgroundColor: string;
     textColor: string;
     squircle: boolean;
+    liquidGlass: boolean;
   };
   groupTitleStyle: {
     background: string;
@@ -96,6 +103,7 @@ Unified `PageDocument` structure:
 ```
 - Includes helper functions `createDefaultPage()` and **`normalizePageDocument()`**.
 - **Important:** `normalizePageDocument()` acts as a safeguard against legacy or incomplete documents. Any new field added to the schema **must** be populated with default values here.
+- `liquidGlass` and `squircle` are mutually exclusive: enabling one in the editor disables the other, and `normalizePageDocument()` forces `squircle` off when `liquidGlass` is on.
 
 ### Firestore Rules & Access
 - `usernames/{username}` → `{uid, createdAt}`: Handles unique username reservation. Create-only by owner; unchangeable (no handle transfers).

@@ -450,6 +450,11 @@
   transform: translateX(1.2rem);
 }
 
+.switch:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .warningBox {
   padding: 0.75rem 0.9rem;
   border-radius: 8px;
