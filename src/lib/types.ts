@@ -77,6 +77,8 @@ export interface ButtonStyle {
   textColor: string;
   /** When true, buttons use iOS-style squircle corners (CSS corner-shape) where supported. */
   squircle: boolean;
+  /** When true, buttons render with iOS 26-style liquid glass refraction (simple-liquid-glass). */
+  liquidGlass: boolean;
 }
 
 export type ShareLinks = Partial<Record<SharePlatform, string>>;
@@ -161,6 +163,7 @@ export function createDefaultPage(uid: string, username: string): PageDocument {
       backgroundColor: "#ffffff",
       textColor: "#111111",
       squircle: false,
+      liquidGlass: false,
     },
     groupTitleStyle: {
       background: defaultTextBackground("#ffffff"),
@@ -215,7 +218,12 @@ export function normalizePageDocument(raw: PageDocument): PageDocument {
     buttonStyle: {
       ...createDefaultPage(raw.uid, raw.username).buttonStyle,
       ...raw.buttonStyle,
-      squircle: Boolean(raw.buttonStyle?.squircle),
+      // Liquid glass and iOS-style squircle are mutually exclusive (the editor
+      // enforces this); if legacy data has both on, glass wins.
+      liquidGlass: Boolean(raw.buttonStyle?.liquidGlass),
+      squircle:
+        Boolean(raw.buttonStyle?.squircle) &&
+        !Boolean(raw.buttonStyle?.liquidGlass),
     },
     groupTitleStyle: {
       background: {

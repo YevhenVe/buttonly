@@ -229,6 +229,60 @@
   .linkButton {
     corner-shape: var(--button-corner-shape, round);
   }
+
+  /* The liquid glass wrapper and every refractive layer the library paints
+     inside it (backdrop, border, brightness) share one corner shape.
+     The layers carry their own plain border-radius and do not inherit
+     corner-shape; a squircle is "fuller" than a rounded rect, so round layers
+     would sit entirely inside a squircle wrapper and stay visibly round.
+     Giving each layer the same corner-shape makes the glass surface itself
+     render as a squircle, matching the hover ring (box-shadow follows
+     corner-shape too). */
+  .liquidGlass,
+  .liquidGlass > div {
+    corner-shape: var(--button-corner-shape, round);
+  }
+}
+
+/* Liquid glass button surface (simple-liquid-glass). The library renders the
+   refractive surface on this wrapper div; the anchor inside stays transparent. */
+.liquidGlass {
+  border-radius: var(--button-radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  /* Smooth spring (quick, no stepped keyframes) */
+  transition:
+    transform 0.32s cubic-bezier(0.22, 1.45, 0.36, 1),
+    box-shadow 0.28s cubic-bezier(0.22, 1.2, 0.36, 1);
+  transform: translateY(0) scale(1);
+  will-change: transform;
+}
+
+.liquidGlass:hover {
+  transform: translateY(-4px) scale(1.035);
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.16),
+    0 0 0 2px color-mix(in srgb, var(--page-fg, #111) 12%, transparent);
+}
+
+.liquidGlass:active {
+  transform: translateY(-1px) scale(0.985);
+  transition-duration: 0.1s;
+  transition-timing-function: cubic-bezier(0.3, 0.7, 0.4, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* In glass mode the anchor is transparent content inside the refractive
+   surface — no own background, blur, shadow, or lift. */
+.linkButton.linkButtonGlass,
+.linkButton.linkButtonGlass:hover,
+.linkButton.linkButtonGlass:active {
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+  border-color: transparent;
+  filter: none;
+  transform: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -243,6 +297,16 @@
   }
 
   .linkButton:active {
+    transform: none;
+  }
+
+  .liquidGlass {
+    transition: none;
+    will-change: auto;
+  }
+
+  .liquidGlass:hover,
+  .liquidGlass:active {
     transform: none;
   }
 }

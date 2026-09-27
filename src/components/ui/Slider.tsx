@@ -9,6 +9,7 @@ interface SliderProps {
   max: number;
   step?: number;
   unit?: string;
+  disabled?: boolean;
   onChange: (value: number) => void;
 }
 
@@ -19,10 +20,11 @@ export function Slider({
   max,
   step = 1,
   unit = "px",
+  disabled = false,
   onChange,
 }: SliderProps) {
   return (
-    <label className={styles.field}>
+    <label className={`${styles.field} ${disabled ? styles.disabled : ""}`}>
       <span className={styles.labelRow}>
         <span>{label}</span>
         <span className={styles.value}>
@@ -37,6 +39,7 @@ export function Slider({
         max={max}
         step={step}
         value={value}
+        disabled={disabled}
         onChange={(e) => onChange(Number(e.target.value))}
       />
     </label>

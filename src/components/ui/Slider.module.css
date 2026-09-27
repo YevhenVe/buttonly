@@ -37,3 +37,11 @@
   box-sizing: border-box;
   accent-color: var(--accent);
 }
+
+.disabled {
+  opacity: 0.45;
+}
+
+.disabled .input {
+  cursor: not-allowed;
+}

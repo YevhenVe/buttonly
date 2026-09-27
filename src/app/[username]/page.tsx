@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { PublicPage } from "@/components/public/PublicPage";
 import { FirebaseMissing } from "@/components/ui/FirebaseMissing";
 import { AGE_CONFIRM_KEY, AGE_CONFIRM_VALUE } from "@/lib/ageGate";
@@ -28,6 +29,43 @@ function loadCachedPageByUsername(username: string) {
     ["page-by-username", username],
     { tags: [`page-${username}`] },
   )(username);
+}
+
+/**
+ * Open Graph / Twitter Card tags for link previews (messengers, socials).
+ * The og:image itself comes from the ./opengraph-image file convention.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ username: string }>;
+}): Promise<Metadata> {
+  const { username: raw } = await params;
+  const username = normalizeUsername(raw ?? "");
+  if (
+    !username ||
+    RESERVED_USERNAMES.has(username) ||
+    !isValidUsername(username)
+  ) {
+    return {};
+  }
+  if (!isFirebaseConfigured()) return {};
+  let page: PageDocument | null;
+  try {
+    page = await loadCachedPageByUsername(username);
+  } catch {
+    return {};
+  }
+  if (!page) return {};
+  const title = page.profile.displayName?.trim() || `@${username}`;
+  const description =
+    page.profile.description?.trim() || `Links by ${title} on Buttonly`;
+  return {
+    title,
+    description,
+    openGraph: { title, description, type: "profile", username },
+    twitter: { card: "summary_large_image", title, description },
+  };
 }
 
 export default async function UserPublicPage({
